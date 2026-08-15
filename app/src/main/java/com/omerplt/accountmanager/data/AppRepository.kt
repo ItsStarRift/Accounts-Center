@@ -28,4 +28,22 @@ class AppRepository(private val database: AppDatabase) {
     }
 
     suspend fun deleteAccount(account: AccountItem) = database.accountDao().deleteAccount(account)
+
+    // --- 3. AŞAMA (AccountField) METODLARI ---
+    fun getFieldsForAccount(accountId: Long): Flow<List<AccountField>> =
+        database.accountFieldDao().getFieldsForAccount(accountId)
+
+    suspend fun addField(accountId: Long, label: String, value: String, isCustomLabel: Boolean, orderIndex: Int): Long {
+        return database.accountFieldDao().insertField(
+            AccountField(
+                accountId = accountId,
+                label = label.trim(),
+                value = value.trim(),
+                isCustomLabel = isCustomLabel,
+                orderIndex = orderIndex
+            )
+        )
+    }
+
+    suspend fun deleteField(field: AccountField) = database.accountFieldDao().deleteField(field)
 }

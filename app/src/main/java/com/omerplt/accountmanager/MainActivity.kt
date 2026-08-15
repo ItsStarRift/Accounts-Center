@@ -29,6 +29,9 @@ import com.omerplt.accountmanager.ui.screens.AccountListViewModelFactory
 import com.omerplt.accountmanager.ui.screens.HomeScreen
 import com.omerplt.accountmanager.ui.screens.HomeViewModel
 import com.omerplt.accountmanager.ui.screens.HomeViewModelFactory
+import com.omerplt.accountmanager.ui.screens.AccountDetailScreen
+import com.omerplt.accountmanager.ui.screens.AccountDetailViewModel
+import com.omerplt.accountmanager.ui.screens.AccountDetailViewModelFactory
 import com.omerplt.accountmanager.ui.theme.HesapYoneticisiTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,7 +52,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Ekranlar arası modern, yumuşak kayma + fade geçişi
+// Ekranlar arasi modern, yumusak kayma + fade gecisi
 private const val TRANSITION_DURATION = 320
 
 @Composable
@@ -96,6 +99,18 @@ private fun AppRoot(repository: AppRepository) {
                     targetOffsetX = { it },
                     animationSpec = tween(TRANSITION_DURATION)
                 ) + fadeOut(tween(TRANSITION_DURATION))
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 4 },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeOut(tween(TRANSITION_DURATION))
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it / 4 },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeIn(tween(TRANSITION_DURATION))
             }
         ) { backStackEntry ->
             val appId = backStackEntry.arguments?.getLong("appId") ?: 0L
@@ -105,6 +120,34 @@ private fun AppRoot(repository: AppRepository) {
             AccountListScreen(
                 viewModel = accountListViewModel,
                 onBack = { navController.popBackStack() }
+                // onAccountClick = { accountId -> navController.navigate(Routes.accountDetail(accountId)) }
+            )
+        }
+
+        // --- 3. ASAMA: HESAP DETAY EKRANI ROTASI ---
+        composable(
+            route = Routes.ACCOUNT_DETAIL,
+            arguments = listOf(navArgument("accountId") { type = NavType.LongType }),
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeIn(tween(TRANSITION_DURATION))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeOut(tween(TRANSITION_DURATION))
+            }
+        ) { backStackEntry ->
+            val accountId = backStackEntry.arguments?.getLong("accountId") ?: 0L
+            val accountDetailViewModel: AccountDetailViewModel = viewModel(
+                factory = AccountDetailViewModelFactory(repository, accountId)
+            )
+            AccountDetailScreen(
+                viewModel = accountDetailViewModel,
+                onBackClick = { navController.popBackStack() }
             )
         }
     }
