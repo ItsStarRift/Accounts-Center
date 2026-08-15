@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -31,7 +32,8 @@ import com.omerplt.accountmanager.ui.components.AddAccountDialog
 @Composable
 fun AccountListScreen(
     viewModel: AccountListViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAccountClick: (Long) -> Unit
 ) {
     val app by viewModel.app.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
@@ -53,18 +55,19 @@ fun AccountListScreen(
                                 AsyncImage(
                                     model = app?.iconPath,
                                     contentDescription = null,
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize().clip(CircleShape)
                                 )
                             } else {
                                 Text(
-                                    app?.name?.take(1)?.uppercase() ?: "",
+                                    text = app?.name?.take(1)?.uppercase() ?: "",
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(app?.name ?: "")
                     }
                 },
@@ -82,11 +85,10 @@ fun AccountListScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            // Boş durum <-> liste arasında yumuşak geçiş
             AnimatedContent(
                 targetState = accounts.isEmpty(),
                 transitionSpec = {
-                    (fadeIn(tween(250)) togetherWith fadeOut(tween(150)))
+                    fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(150))
                 },
                 label = "accounts-empty-list"
             ) { isEmpty ->
@@ -106,33 +108,36 @@ fun AccountListScreen(
                         items(accounts, key = { it.id }) { account ->
                             AccountRow(
                                 account = account,
-                                modifier = Modifier
+                                onClick = { onAccountClick(account.id) }
                             )
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
-                        item { Spacer(Modifier.height(96.dp)) }
+                        item { Spacer(modifier = Modifier.height(96.dp)) }
                     }
                 }
             }
         }
-    }
 
-    if (showAddDialog) {
-        AddAccountDialog(
-            onDismiss = { showAddDialog = false },
-            onSave = { name, iconPath -> viewModel.addAccount(name, iconPath) }
-        )
+        if (showAddDialog) {
+            AddAccountDialog(
+                onDismiss = { showAddDialog = false },
+                onSave = { name, iconPath ->
+                    viewModel.addAccount(name, iconPath)
+                    showAddDialog = false
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun AccountRow(account: AccountItem, modifier: Modifier = Modifier) {
+fun AccountRow(account: AccountItem, onClick: () -> Unit) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable { /* 3. Aşamada hesap detayına gidecek */ }
+            .clickable(onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -147,6 +152,7 @@ private fun AccountRow(account: AccountItem, modifier: Modifier = Modifier) {
                 AsyncImage(
                     model = account.iconPath,
                     contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize().clip(CircleShape)
                 )
             } else {
@@ -158,7 +164,11 @@ private fun AccountRow(account: AccountItem, modifier: Modifier = Modifier) {
                 )
             }
         }
-        Spacer(Modifier.width(12.dp))
-        Text(account.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = account.name,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
