@@ -1,5 +1,8 @@
 package com.omerplt.accountmanager.ui.screens
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -49,8 +53,17 @@ fun HomeScreen(
     Scaffold(
         floatingActionButton = {
             if (selectedTab == BottomTab.UYGULAMALAR && !isSearchActive) {
+                val rotation by animateFloatAsState(
+                    targetValue = if (showAddDialog) 45f else 0f,
+                    animationSpec = tween(200),
+                    label = "fab-rotation"
+                )
                 FloatingActionButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Uygulama/oyun ekle")
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Uygulama/oyun ekle",
+                        modifier = Modifier.rotate(rotation)
+                    )
                 }
             }
         },
@@ -141,8 +154,12 @@ private fun AppGroupedList(
                     modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp)
                 )
             }
-            items(apps) { app ->
-                AppRow(app = app, onClick = { onAppClick(app.id) })
+            items(apps, key = { it.id }) { app ->
+                AppRow(
+                    app = app,
+                    onClick = { onAppClick(app.id) },
+                    modifier = Modifier.animateItem()
+                )
                 Spacer(Modifier.height(8.dp))
             }
         }
@@ -164,9 +181,9 @@ private fun SearchResultsList(
 }
 
 @Composable
-private fun AppRow(app: AppWithAccountCount, onClick: () -> Unit) {
+private fun AppRow(app: AppWithAccountCount, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)

@@ -4,14 +4,28 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.omerplt.accountmanager.data.AppDatabase
 import com.omerplt.accountmanager.data.AppRepository
+import com.omerplt.accountmanager.navigation.Routes
+import com.omerplt.accountmanager.ui.screens.AccountListScreen
+import com.omerplt.accountmanager.ui.screens.AccountListViewModel
+import com.omerplt.accountmanager.ui.screens.AccountListViewModelFactory
 import com.omerplt.accountmanager.ui.screens.HomeScreen
 import com.omerplt.accountmanager.ui.screens.HomeViewModel
 import com.omerplt.accountmanager.ui.screens.HomeViewModelFactory
@@ -35,15 +49,63 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Ekranlar arası modern, yumuşak kayma + fade geçişi
+private const val TRANSITION_DURATION = 320
+
 @Composable
 private fun AppRoot(repository: AppRepository) {
-    val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
+    val navController = rememberNavController()
 
-    // Hesap ekranı navigasyonu 2. aşamada eklenecek; şimdilik ana ekranı gösteriyoruz.
-    HomeScreen(
-        viewModel = homeViewModel,
-        onAppClick = { appId ->
-            // TODO (2. Aşama): hesap listesi ekranına git
+    NavHost(
+        navController = navController,
+        startDestination = Routes.HOME
+    ) {
+        composable(
+            route = Routes.HOME,
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 4 },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeOut(tween(TRANSITION_DURATION))
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it / 4 },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeIn(tween(TRANSITION_DURATION))
+            }
+        ) {
+            val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
+            HomeScreen(
+                viewModel = homeViewModel,
+                onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) }
+            )
         }
-    )
+
+        composable(
+            route = Routes.ACCOUNT_LIST,
+            arguments = listOf(navArgument("appId") { type = NavType.LongType }),
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeIn(tween(TRANSITION_DURATION))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(TRANSITION_DURATION)
+                ) + fadeOut(tween(TRANSITION_DURATION))
+            }
+        ) { backStackEntry ->
+            val appId = backStackEntry.arguments?.getLong("appId") ?: 0L
+            val accountListViewModel: AccountListViewModel = viewModel(
+                factory = AccountListViewModelFactory(repository, appId)
+            )
+            AccountListScreen(
+                viewModel = accountListViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+    }
 }

@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.omerplt.accountmanager.data.AppCategory
+import com.omerplt.accountmanager.ui.components.AnimatedDialogEntrance
 import com.omerplt.accountmanager.util.CameraFileHelper
 import com.omerplt.accountmanager.util.IconFetcher
 import kotlinx.coroutines.launch
@@ -100,6 +101,7 @@ fun AddAppDialog(
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        AnimatedDialogEntrance {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
@@ -235,6 +237,7 @@ fun AddAppDialog(
                     }
                 }
             }
+        }
         }
     }
 
