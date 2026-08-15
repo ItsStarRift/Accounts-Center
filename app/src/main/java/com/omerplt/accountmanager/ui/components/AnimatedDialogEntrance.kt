@@ -1,32 +1,36 @@
 package com.omerplt.accountmanager.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 
 /**
- * Tam ekran dialogların içeriğini yumuşak bir "fade + scale" ile açar.
- * Modern Android 14 / M3 geçişlerine benzer bir his verir.
+ * Liste öğelerine (uygulama/hesap satırları) hafif bir "aşağıdan yukarı + fade" giriş
+ * animasyonu uygular. LazyColumn'un animateItem() gibi daha yeni Compose sürümlerine
+ * özgü API'lerine bağımlı olmadığı için her Compose sürümüyle güvenle çalışır.
  */
 @Composable
-fun AnimatedDialogEntrance(content: @Composable () -> Unit) {
+fun AnimatedListItem(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     val state = remember {
         MutableTransitionState(false).apply { targetState = true }
     }
     AnimatedVisibility(
         visibleState = state,
-        enter = fadeIn(tween(220)) +
-            scaleIn(initialScale = 0.94f, animationSpec = tween(220, easing = FastOutSlowInEasing)),
-        exit = fadeOut(tween(140)) +
-            scaleOut(targetScale = 0.96f, animationSpec = tween(140))
+        enter = fadeIn(tween(280)) + slideInVertically(
+            initialOffsetY = { it / 6 },
+            animationSpec = tween(280)
+        ),
+        modifier = modifier
     ) {
         content()
     }
 }
+

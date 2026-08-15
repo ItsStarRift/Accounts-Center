@@ -3,6 +3,8 @@ package com.omerplt.accountmanager.ui.screens
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.animateItemPlacement
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -125,6 +127,7 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AppGroupedList(
     groups: List<Pair<Char, List<AppWithAccountCount>>>,
@@ -158,7 +161,7 @@ private fun AppGroupedList(
                 AppRow(
                     app = app,
                     onClick = { onAppClick(app.id) },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier.animateItemPlacement()
                 )
                 Spacer(Modifier.height(8.dp))
             }
