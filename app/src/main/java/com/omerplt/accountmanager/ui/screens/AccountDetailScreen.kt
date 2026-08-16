@@ -19,6 +19,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.omerplt.accountmanager.R
 import androidx.compose.ui.unit.dp
 import com.omerplt.accountmanager.data.AccountField
 import com.omerplt.accountmanager.ui.components.AddFieldDialog
@@ -35,23 +37,23 @@ fun AccountDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Hesap Detayları") },
+                title = { Text(stringResource(R.string.account_detail_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Terim Ekle")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_field))
             }
         }
     ) { padding ->
         if (fields.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Henüz terim eklenmemiş.", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.detail_empty), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             LazyColumn(
@@ -107,7 +109,7 @@ fun FieldItemCard(field: AccountField, onDelete: () -> Unit) {
                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                     Icon(
                         imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Görünürlük"
+                        contentDescription = stringResource(R.string.cd_visibility)
                     )
                 }
             }
@@ -115,12 +117,12 @@ fun FieldItemCard(field: AccountField, onDelete: () -> Unit) {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText(field.label, field.value)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, "Kopyalandı", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
             }) {
-                Icon(Icons.Default.ContentCopy, contentDescription = "Kopyala")
+                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
             }
             IconButton(onClick = { showDeleteConfirm = true }) {
-                Icon(Icons.Default.Delete, contentDescription = "Sil", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_confirm), tint = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -128,16 +130,16 @@ fun FieldItemCard(field: AccountField, onDelete: () -> Unit) {
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("\"${field.label}\" silinsin mi?") },
-            text = { Text("Bu işlem geri alınamaz.") },
+            title = { Text(stringResource(R.string.delete_item_title, field.label)) },
+            text = { Text(stringResource(R.string.delete_field_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
                     showDeleteConfirm = false
-                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

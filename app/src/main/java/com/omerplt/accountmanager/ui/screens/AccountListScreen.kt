@@ -24,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import com.omerplt.accountmanager.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -75,14 +77,14 @@ fun AccountListScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Hesap ekle")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_account))
             }
         }
     ) { padding ->
@@ -97,7 +99,7 @@ fun AccountListScreen(
                 if (isEmpty) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "Henüz bir hesap eklemedin.\nSağ alttaki + tuşuyla başla.",
+                            stringResource(R.string.accountlist_empty),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -184,16 +186,16 @@ fun AccountRow(account: AccountItem, onClick: () -> Unit, onDelete: () -> Unit) 
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("\"${account.name}\" silinsin mi?") },
-            text = { Text("Bu hesaba ait tüm terimler de birlikte silinecek. Bu işlem geri alınamaz.") },
+            title = { Text(stringResource(R.string.delete_item_title, account.name)) },
+            text = { Text(stringResource(R.string.delete_account_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
                     showDeleteConfirm = false
-                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

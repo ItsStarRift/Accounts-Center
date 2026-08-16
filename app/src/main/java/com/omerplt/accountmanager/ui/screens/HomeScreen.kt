@@ -28,8 +28,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.omerplt.accountmanager.R
 import coil.compose.AsyncImage
 import com.omerplt.accountmanager.data.AppCategory
 import com.omerplt.accountmanager.data.AppWithAccountCount
@@ -64,7 +66,7 @@ fun HomeScreen(
                 FloatingActionButton(onClick = { showAddDialog = true }) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = "Uygulama/oyun ekle",
+                        contentDescription = stringResource(R.string.cd_add_app),
                         modifier = Modifier.rotate(rotation)
                     )
                 }
@@ -87,7 +89,7 @@ fun HomeScreen(
                             onSearch = {},
                             active = isSearchActive,
                             onActiveChange = viewModel::onSearchActiveChange,
-                            placeholder = { Text("Bir uygulama aratın…") },
+                            placeholder = { Text(stringResource(R.string.search_placeholder)) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -140,7 +142,7 @@ private fun AppGroupedList(
     if (groups.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                "Henüz bir uygulama veya oyun eklemedin.\nSağ alttaki + tuşuyla başla.",
+                stringResource(R.string.home_empty),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -222,7 +224,7 @@ private fun AppRow(
         Column {
             Text(app.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Hesap sayısı: ${app.accountCount}",
+                stringResource(R.string.account_count, app.accountCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -232,16 +234,16 @@ private fun AppRow(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("\"${app.name}\" silinsin mi?") },
-            text = { Text("Bu uygulamaya ait tüm hesaplar ve terimler de birlikte silinecek. Bu işlem geri alınamaz.") },
+            title = { Text(stringResource(R.string.delete_item_title, app.name)) },
+            text = { Text(stringResource(R.string.delete_app_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
                     showDeleteConfirm = false
-                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -272,7 +274,7 @@ private fun HighlightedAppRow(
         Column {
             Text(text = highlightMatch(app.name, query), style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Hesap sayısı: ${app.accountCount}",
+                stringResource(R.string.account_count, app.accountCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -282,16 +284,16 @@ private fun HighlightedAppRow(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("\"${app.name}\" silinsin mi?") },
-            text = { Text("Bu uygulamaya ait tüm hesaplar ve terimler de birlikte silinecek. Bu işlem geri alınamaz.") },
+            title = { Text(stringResource(R.string.delete_item_title, app.name)) },
+            text = { Text(stringResource(R.string.delete_app_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
                     showDeleteConfirm = false
-                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -355,13 +357,13 @@ private fun FloatingBottomNav(
         ) {
             NavItem(
                 icon = Icons.Default.Apps,
-                label = "Uygulamalar",
+                label = stringResource(R.string.nav_apps),
                 selected = selected == BottomTab.UYGULAMALAR,
                 onClick = { onSelect(BottomTab.UYGULAMALAR) }
             )
             NavItem(
                 icon = Icons.Default.Settings,
-                label = "Ayarlar",
+                label = stringResource(R.string.settings_title),
                 selected = selected == BottomTab.AYARLAR,
                 onClick = { onSelect(BottomTab.AYARLAR) }
             )

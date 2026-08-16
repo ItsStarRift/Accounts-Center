@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import androidx.compose.ui.res.stringResource
+import com.omerplt.accountmanager.R
 import com.omerplt.accountmanager.util.CameraFileHelper
 
 @Composable
@@ -81,10 +83,10 @@ fun AddAccountDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Kapat")
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                         }
                         Text(
-                            text = "Hesap Ekle",
+                            text = stringResource(R.string.add_account_title),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f).padding(start = 4.dp)
                         )
@@ -93,7 +95,7 @@ fun AddAccountDialog(
                             shape = RoundedCornerShape(20.dp),
                             enabled = name.isNotBlank()
                         ) {
-                            Text("Kaydet")
+                            Text(stringResource(R.string.save_btn))
                         }
                     }
 
@@ -115,7 +117,7 @@ fun AddAccountDialog(
                                 if (iconPath != null) {
                                     AsyncImage(
                                         model = iconPath,
-                                        contentDescription = "Seçilen ikon",
+                                        contentDescription = stringResource(R.string.cd_selected_icon),
                                         modifier = Modifier.fillMaxSize().clip(CircleShape)
                                     )
                                 } else {
@@ -137,7 +139,7 @@ fun AddAccountDialog(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "İkon ekle",
+                                    contentDescription = stringResource(R.string.cd_add_icon),
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -148,7 +150,7 @@ fun AddAccountDialog(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Hesap İsmi") },
+                            label = { Text(stringResource(R.string.account_name_label)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -161,7 +163,7 @@ fun AddAccountDialog(
     if (showPickerSheet) {
         AlertDialog(
             onDismissRequest = { showPickerSheet = false },
-            title = { Text("İkon seç") },
+            title = { Text(stringResource(R.string.select_icon_title)) },
             text = {
                 Column {
                     Row(
@@ -176,7 +178,7 @@ fun AddAccountDialog(
                     ) {
                         Icon(Icons.Default.PhotoCamera, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text("Kamera")
+                        Text(stringResource(R.string.camera))
                     }
                     Row(
                         modifier = Modifier
@@ -190,12 +192,12 @@ fun AddAccountDialog(
                     ) {
                         Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text("Galeri")
+                        Text(stringResource(R.string.gallery))
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showPickerSheet = false }) { Text("İptal") }
+                TextButton(onClick = { showPickerSheet = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import androidx.compose.ui.res.stringResource
+import com.omerplt.accountmanager.R
 import com.omerplt.accountmanager.data.AppCategory
 import com.omerplt.accountmanager.ui.components.AnimatedDialogEntrance
 import com.omerplt.accountmanager.util.CameraFileHelper
@@ -116,10 +118,10 @@ fun AddAppDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Kapat")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                     }
                     Text(
-                        text = "Liste Oluştur",
+                        text = stringResource(R.string.create_list_title),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f).padding(start = 4.dp)
                     )
@@ -135,7 +137,7 @@ fun AddAppDialog(
                         shape = RoundedCornerShape(20.dp),
                         enabled = name.isNotBlank()
                     ) {
-                        Text("Kaydet")
+                        Text(stringResource(R.string.save_btn))
                     }
                 }
 
@@ -161,7 +163,7 @@ fun AddAppDialog(
                                 isFetchingIcon -> CircularProgressIndicator(modifier = Modifier.size(28.dp))
                                 iconPath != null -> AsyncImage(
                                     model = iconPath,
-                                    contentDescription = "Seçilen ikon",
+                                    contentDescription = stringResource(R.string.cd_selected_icon),
                                     modifier = Modifier.fillMaxSize().clip(CircleShape)
                                 )
                                 else -> Icon(
@@ -182,7 +184,7 @@ fun AddAppDialog(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = "İkon ekle",
+                                contentDescription = stringResource(R.string.cd_add_icon),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -191,7 +193,7 @@ fun AddAppDialog(
                     if (showNameWarning) {
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Önce uygulamanın adını girin",
+                            stringResource(R.string.enter_name_first),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -202,7 +204,7 @@ fun AddAppDialog(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Ad") },
+                        label = { Text(stringResource(R.string.dialog_name_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -229,7 +231,7 @@ fun AddAppDialog(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "Lütfen ikisinden birini seçiniz",
+                                stringResource(R.string.please_select_category),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -245,7 +247,7 @@ fun AddAppDialog(
     fetchedPreview?.let { bitmap ->
         AlertDialog(
             onDismissRequest = { fetchedPreview = null },
-            title = { Text("Uygulamanızın ikonu bu mu?") },
+            title = { Text(stringResource(R.string.is_this_icon)) },
             text = {
                 Image(
                     bitmap = bitmap.asImageBitmap(),
@@ -259,13 +261,13 @@ fun AddAppDialog(
                         iconPath = IconFetcher.saveBitmapToInternalStorage(context, bitmap)
                         fetchedPreview = null
                     }
-                }) { Text("Evet") }
+                }) { Text(stringResource(R.string.yes)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     fetchedPreview = null
                     showPickerSheet = true
-                }) { Text("Hayır") }
+                }) { Text(stringResource(R.string.no)) }
             }
         )
     }
@@ -274,7 +276,7 @@ fun AddAppDialog(
     if (showPickerSheet) {
         AlertDialog(
             onDismissRequest = { showPickerSheet = false },
-            title = { Text("İkon seç") },
+            title = { Text(stringResource(R.string.select_icon_title)) },
             text = {
                 Column {
                     Row(
@@ -289,7 +291,7 @@ fun AddAppDialog(
                     ) {
                         Icon(Icons.Default.PhotoCamera, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text("Kamera")
+                        Text(stringResource(R.string.camera))
                     }
                     Row(
                         modifier = Modifier
@@ -303,12 +305,12 @@ fun AddAppDialog(
                     ) {
                         Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text("Galeri")
+                        Text(stringResource(R.string.gallery))
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showPickerSheet = false }) { Text("İptal") }
+                TextButton(onClick = { showPickerSheet = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -326,12 +328,12 @@ private fun SingleChoiceSegment(
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         SegmentOption(
-            text = "Uygulama",
+            text = stringResource(R.string.category_app),
             selected = selected == AppCategory.UYGULAMA,
             modifier = Modifier.weight(1f)
         ) { onSelect(AppCategory.UYGULAMA) }
         SegmentOption(
-            text = "Oyun",
+            text = stringResource(R.string.category_game),
             selected = selected == AppCategory.OYUN,
             modifier = Modifier.weight(1f)
         ) { onSelect(AppCategory.OYUN) }

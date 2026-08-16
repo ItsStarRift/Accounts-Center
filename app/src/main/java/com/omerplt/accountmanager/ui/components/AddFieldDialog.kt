@@ -5,14 +5,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.omerplt.accountmanager.R
 
 @Composable
 fun AddFieldDialog(
     onDismiss: () -> Unit,
     onConfirm: (label: String, value: String, isCustom: Boolean) -> Unit
 ) {
-    val predefinedLabels = listOf("Telefon Numarası", "Email", "Kullanıcı Adı", "Şifre", "Diğer/Özel Terim")
+    val customOptionLabel = stringResource(R.string.custom_field_option)
+    val predefinedLabels = listOf(
+        stringResource(R.string.preset_phone),
+        stringResource(R.string.preset_email),
+        stringResource(R.string.preset_username),
+        stringResource(R.string.preset_password),
+        customOptionLabel
+    )
     var selectedLabel by remember { mutableStateOf(predefinedLabels.first()) }
     var customLabel by remember { mutableStateOf("") }
     var value by remember { mutableStateOf("") }
@@ -20,7 +29,7 @@ fun AddFieldDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isCustomStep) "Özel Terim" else "Terim Ekle") },
+        title = { Text(if (isCustomStep) stringResource(R.string.custom_field_title) else stringResource(R.string.cd_add_field)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!isCustomStep) {
@@ -40,7 +49,7 @@ fun AddFieldDialog(
                     OutlinedTextField(
                         value = customLabel,
                         onValueChange = { customLabel = it },
-                        label = { Text("Terim Adı (Örn: Google ile giriş)") },
+                        label = { Text(stringResource(R.string.custom_field_name_hint)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -49,7 +58,7 @@ fun AddFieldDialog(
                 OutlinedTextField(
                     value = value,
                     onValueChange = { value = it },
-                    label = { Text(if (isCustomStep) "Değer" else "$selectedLabel Değeri") },
+                    label = { Text(if (isCustomStep) stringResource(R.string.value_label) else stringResource(R.string.field_value_label, selectedLabel)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -58,7 +67,7 @@ fun AddFieldDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (!isCustomStep && selectedLabel == "Diğer/Özel Terim") {
+                    if (!isCustomStep && selectedLabel == customOptionLabel) {
                         isCustomStep = true
                     } else {
                         val finalLabel = if (isCustomStep) customLabel else selectedLabel
@@ -68,14 +77,14 @@ fun AddFieldDialog(
                     }
                 }
             ) {
-                Text(if (!isCustomStep && selectedLabel == "Diğer/Özel Terim") "İleri" else "Ekle")
+                Text(if (!isCustomStep && selectedLabel == customOptionLabel) stringResource(R.string.next_btn) else stringResource(R.string.add_btn))
             }
         },
         dismissButton = {
             TextButton(onClick = {
                 if (isCustomStep) isCustomStep = false else onDismiss()
             }) {
-                Text(if (isCustomStep) "Geri" else "İptal")
+                Text(if (isCustomStep) stringResource(R.string.back_btn) else stringResource(R.string.cancel))
             }
         }
     )
