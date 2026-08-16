@@ -5,8 +5,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,7 +30,7 @@ import coil.compose.AsyncImage
 import com.omerplt.accountmanager.data.AccountItem
 import com.omerplt.accountmanager.ui.components.AddAccountDialog
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AccountListScreen(
     viewModel: AccountListViewModel,
@@ -108,7 +110,8 @@ fun AccountListScreen(
                         items(accounts, key = { it.id }) { account ->
                             AccountRow(
                                 account = account,
-                                onClick = { onAccountClick(account.id) }
+                                onClick = { onAccountClick(account.id) },
+                                onDelete = { viewModel.deleteAccount(account) }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -130,14 +133,20 @@ fun AccountListScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AccountRow(account: AccountItem, onClick: () -> Unit) {
+fun AccountRow(account: AccountItem, onClick: () -> Unit, onDelete: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showDeleteConfirm = true }
+            )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -169,6 +178,23 @@ fun AccountRow(account: AccountItem, onClick: () -> Unit) {
             text = account.name,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.bodyLarge
+        )
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("\"${account.name}\" silinsin mi?") },
+            text = { Text("Bu hesaba ait tüm terimler de birlikte silinecek. Bu işlem geri alınamaz.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+            }
         )
     }
 }

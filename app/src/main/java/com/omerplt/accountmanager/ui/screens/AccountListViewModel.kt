@@ -29,6 +29,12 @@ class AccountListViewModel(
             repository.addAccount(appId, name, iconPath)
         }
     }
+
+    fun deleteAccount(account: AccountItem) {
+        viewModelScope.launch {
+            repository.deleteAccount(account)
+        }
+    }
 }
 
 class AccountListViewModelFactory(

@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(private val repository: AppRepository) : ViewModel() {
 
-    /** Tüm uygulama/oyunlar, veritabanından canlı olarak. */
     private val allApps: StateFlow<List<AppWithAccountCount>> =
         repository.getAllAppsWithCount()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -26,7 +25,6 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
     private val _isSearchActive = MutableStateFlow(false)
     val isSearchActive: StateFlow<Boolean> = _isSearchActive
 
-    /** Ana ekranda gösterilen, A-Z harfine göre gruplanmış tam liste (arama kapalıyken). */
     val alphabeticalGroups: StateFlow<List<Pair<Char, List<AppWithAccountCount>>>> =
         allApps.map { apps ->
             apps.groupBy { it.name.first().uppercaseChar() }
@@ -34,7 +32,6 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
                 .map { (letter, items) -> letter to items }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Arama aktifken gösterilen, sorguya uyan sonuçlar (gruplanmamış, düz liste). */
     val searchResults: StateFlow<List<AppWithAccountCount>> =
         allApps.combine(_searchQuery) { apps, query ->
             if (query.isBlank()) emptyList()
@@ -53,6 +50,19 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
     fun addApp(name: String, category: AppCategory, iconPath: String?) {
         viewModelScope.launch {
             repository.addApp(name, category, iconPath)
+        }
+    }
+
+    fun deleteApp(app: AppWithAccountCount) {
+        viewModelScope.launch {
+            repository.deleteApp(
+                com.omerplt.accountmanager.data.AppItem(
+                    id = app.id,
+                    name = app.name,
+                    category = app.category,
+                    iconPath = app.iconPath
+                )
+            )
         }
     }
 }

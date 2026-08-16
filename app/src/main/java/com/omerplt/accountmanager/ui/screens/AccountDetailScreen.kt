@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -57,8 +58,11 @@ fun AccountDetailScreen(
                 contentPadding = padding,
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(fields) { field ->
-                    FieldItemCard(field = field)
+                items(fields, key = { it.id }) { field ->
+                    FieldItemCard(
+                        field = field,
+                        onDelete = { viewModel.deleteField(field) }
+                    )
                 }
             }
         }
@@ -76,9 +80,10 @@ fun AccountDetailScreen(
 }
 
 @Composable
-fun FieldItemCard(field: AccountField) {
+fun FieldItemCard(field: AccountField, onDelete: () -> Unit) {
     val context = LocalContext.current
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val isPassword = field.label.contains("Şifre", ignoreCase = true) || field.label.contains("Password", ignoreCase = true)
 
     Card(
@@ -114,6 +119,26 @@ fun FieldItemCard(field: AccountField) {
             }) {
                 Icon(Icons.Default.ContentCopy, contentDescription = "Kopyala")
             }
+            IconButton(onClick = { showDeleteConfirm = true }) {
+                Icon(Icons.Default.Delete, contentDescription = "Sil", tint = MaterialTheme.colorScheme.error)
+            }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("\"${field.label}\" silinsin mi?") },
+            text = { Text("Bu işlem geri alınamaz.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+            }
+        )
     }
 }

@@ -3,8 +3,10 @@ package com.omerplt.accountmanager.ui.screens
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -97,12 +99,17 @@ fun HomeScreen(
                                 onAppClick = {
                                     viewModel.onSearchActiveChange(false)
                                     onAppClick(it)
-                                }
+                                },
+                                onDeleteApp = { viewModel.deleteApp(it) }
                             )
                         }
 
                         if (!isSearchActive) {
-                            AppGroupedList(groups = groups, onAppClick = onAppClick)
+                            AppGroupedList(
+                                groups = groups,
+                                onAppClick = onAppClick,
+                                onDeleteApp = { viewModel.deleteApp(it) }
+                            )
                         }
                     }
                 }
@@ -123,11 +130,12 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AppGroupedList(
     groups: List<Pair<Char, List<AppWithAccountCount>>>,
-    onAppClick: (Long) -> Unit
+    onAppClick: (Long) -> Unit,
+    onDeleteApp: (AppWithAccountCount) -> Unit
 ) {
     if (groups.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -157,6 +165,7 @@ private fun AppGroupedList(
                 AppRow(
                     app = app,
                     onClick = { onAppClick(app.id) },
+                    onDelete = { onDeleteApp(app) },
                     modifier = Modifier
                 )
                 Spacer(Modifier.height(8.dp))
@@ -166,27 +175,45 @@ private fun AppGroupedList(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SearchResultsList(
     results: List<AppWithAccountCount>,
     query: String,
-    onAppClick: (Long) -> Unit
+    onAppClick: (Long) -> Unit,
+    onDeleteApp: (AppWithAccountCount) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(results) { app ->
-            HighlightedAppRow(app = app, query = query, onClick = { onAppClick(app.id) })
+        items(results, key = { it.id }) { app ->
+            HighlightedAppRow(
+                app = app,
+                query = query,
+                onClick = { onAppClick(app.id) },
+                onDelete = { onDeleteApp(app) }
+            )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun AppRow(app: AppWithAccountCount, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AppRow(
+    app: AppWithAccountCount,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showDeleteConfirm = true }
+            )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -201,14 +228,42 @@ private fun AppRow(app: AppWithAccountCount, onClick: () -> Unit, modifier: Modi
             )
         }
     }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("\"${app.name}\" silinsin mi?") },
+            text = { Text("Bu uygulamaya ait tüm hesaplar ve terimler de birlikte silinecek. Bu işlem geri alınamaz.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun HighlightedAppRow(app: AppWithAccountCount, query: String, onClick: () -> Unit) {
+private fun HighlightedAppRow(
+    app: AppWithAccountCount,
+    query: String,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showDeleteConfirm = true }
+            )
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -222,6 +277,23 @@ private fun HighlightedAppRow(app: AppWithAccountCount, query: String, onClick: 
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("\"${app.name}\" silinsin mi?") },
+            text = { Text("Bu uygulamaya ait tüm hesaplar ve terimler de birlikte silinecek. Bu işlem geri alınamaz.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) { Text("Sil", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("İptal") }
+            }
+        )
     }
 }
 
