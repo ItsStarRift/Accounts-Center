@@ -1,4 +1,67 @@
 name: Android CI & Release
+[200~on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Generate Compatible Gradle Wrapper
+      run: gradle wrapper --gradle-version 8.6
+
+    - name: Build Both APKs
+      run: ./gradlew assembleDebug assembleRelease -x lint -x test
+
+    - name: Sign Release APK
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: r0adkll/sign-android-release@v1
+      id: sign_app
+      with:
+        releaseDirectory: app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+        alias: ${{ secrets.KEY_ALIAS }}
+        keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+        buildToolsVersion: "34.0.0"
+
+    - name: Upload Debug Artifact (For Normal Push)
+      if: "!startsWith(github.ref, 'refs/tags/')"
+      uses: actions/upload-artifact@v4
+      with:
+        name: Accounts-Center-Debug-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          ${{ steps.sign_app.outputs.signedReleaseFile }}
+          app/build/outputs/apk/debug/app-debug.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+EOF~
 on:
   push:
     branches: [ "main" ]
@@ -43,6 +106,7 @@ jobs:
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
         keyPassword: ${{ secrets.KEY_PASSWORD }}
+        buildToolsVersion: "34.0.0"
 
     - name: Upload Debug Artifact (For Normal Push)
       if: "!startsWith(github.ref, 'refs/tags/')"
