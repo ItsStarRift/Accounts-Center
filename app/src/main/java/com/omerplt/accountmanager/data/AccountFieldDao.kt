@@ -21,4 +21,10 @@ interface AccountFieldDao {
 
     @Delete
     suspend fun deleteField(field: AccountField)
+
+    @Query("SELECT * FROM account_fields")
+    suspend fun getAllFieldsOnce(): List<AccountField>
+
+    @Insert
+    suspend fun insertFields(fields: List<AccountField>)
 }

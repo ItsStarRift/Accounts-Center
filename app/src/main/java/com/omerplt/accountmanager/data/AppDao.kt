@@ -7,7 +7,6 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-/** Bir uygulama satırı, o uygulamaya ait hesap sayısıyla birlikte. */
 data class AppWithAccountCount(
     val id: Long,
     val name: String,
@@ -40,4 +39,13 @@ interface AppDao {
 
     @Delete
     suspend fun deleteApp(app: AppItem)
+
+    @Query("SELECT * FROM apps")
+    suspend fun getAllAppsOnce(): List<AppItem>
+
+    @Insert
+    suspend fun insertApps(apps: List<AppItem>)
+
+    @Query("DELETE FROM apps")
+    suspend fun clearApps()
 }

@@ -32,6 +32,9 @@ import com.omerplt.accountmanager.ui.screens.HomeViewModelFactory
 import com.omerplt.accountmanager.ui.screens.AccountDetailScreen
 import com.omerplt.accountmanager.ui.screens.AccountDetailViewModel
 import com.omerplt.accountmanager.ui.screens.AccountDetailViewModelFactory
+import com.omerplt.accountmanager.ui.screens.SettingsScreen
+import com.omerplt.accountmanager.ui.screens.SettingsViewModel
+import com.omerplt.accountmanager.ui.screens.SettingsViewModelFactory
 import com.omerplt.accountmanager.ui.theme.HesapYoneticisiTheme
 
 class MainActivity : ComponentActivity() {
@@ -72,9 +75,11 @@ private fun AppRoot(repository: AppRepository) {
             }
         ) {
             val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
+            val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(repository))
             HomeScreen(
                 viewModel = homeViewModel,
-                onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) }
+                onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
+                settingsContent = { SettingsScreen(viewModel = settingsViewModel) }
             )
         }
 

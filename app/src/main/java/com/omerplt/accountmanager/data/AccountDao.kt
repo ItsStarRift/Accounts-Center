@@ -21,4 +21,10 @@ interface AccountDao {
 
     @Delete
     suspend fun deleteAccount(account: AccountItem)
+
+    @Query("SELECT * FROM accounts")
+    suspend fun getAllAccountsOnce(): List<AccountItem>
+
+    @Insert
+    suspend fun insertAccounts(accounts: List<AccountItem>)
 }
