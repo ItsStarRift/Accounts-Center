@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -22,8 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.omerplt.accountmanager.util.PinManager
 
 private const val GITHUB_URL = "https://github.com/ItsStarRift/Accounts-Center"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
@@ -36,6 +40,13 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     var showAboutDialog by remember { mutableStateOf(false) }
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+
+    // PIN Kontrol Durumları
+    val pinManager = remember { PinManager(context) }
+    var isPinSet by remember { mutableStateOf(pinManager.isPinSet()) }
+    var showPinWarningDialog by remember { mutableStateOf(false) }
+    var showPinCreateDialog by remember { mutableStateOf(false) }
+    var showPinRemoveDialog by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -79,9 +90,10 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             SettingsRow(
                 icon = Icons.Default.Lock,
                 title = "Uygulama Kilidi",
-                subtitle = "Yakında eklenecek",
-                onClick = {
-                    Toast.makeText(context, "Uygulama kilidi yakında eklenecek", Toast.LENGTH_SHORT).show()
+                subtitle = if (isPinSet) "Açık" else "Kapalı",
+                onClick = { 
+                    if (isPinSet) showPinRemoveDialog = true 
+                    else showPinWarningDialog = true 
                 }
             )
             SettingsDivider()
@@ -145,10 +157,11 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 onClick = { showAboutDialog = true }
             )
         }
-
+        
         Spacer(Modifier.height(96.dp))
     }
 
+    // Hakkında Diyaloğu
     if (showAboutDialog) {
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
@@ -156,8 +169,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             text = {
                 Text(
                     "Sürüm $APP_VERSION\n\n" +
-                        "Tüm verileriniz cihazınızda şifreli olarak saklanır, " +
-                        "hiçbir veri sunucuya gönderilmez."
+                    "Tüm verileriniz cihazınızda şifreli olarak saklanır, " +
+                    "hiçbir veri sunucuya gönderilmez."
                 )
             },
             confirmButton = {
@@ -166,6 +179,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         )
     }
 
+    // İçe Aktarma Onay Diyaloğu
     if (showImportConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showImportConfirmDialog = false },
@@ -173,7 +187,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             text = {
                 Text(
                     "Bu işlem, cihazınızdaki TÜM mevcut verilerin yerine seçtiğiniz " +
-                        "yedeği koyacak. Şu anki veriler silinecek ve geri alınamayacak. Devam edilsin mi?"
+                    "yedeği koyacak. Şu anki veriler silinecek ve geri alınamayacak. Devam edilsin mi?"
                 )
             },
             confirmButton = {
@@ -194,6 +208,170 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             },
             dismissButton = {
                 TextButton(onClick = { showImportConfirmDialog = false }) { Text("İptal") }
+            }
+        )
+    }
+
+    // 1. PIN Kurulum Öncesi Güvenlik Uyarısı (Senin İstediğin)
+    if (showPinWarningDialog) {
+        var riskAccepted by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { showPinWarningDialog = false },
+            title = { Text("Dikkat: Kurtarılamaz Veri Kaybı", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
+            text = {
+                Column {
+                    Text(
+                        "Uygulama tamamen çevrimdışı çalışır ve veritabanı şifrelidir.\n\n" +
+                        "Eğer PIN kodunuzu unutursanız verilerinizi HİÇBİR ŞEKİLDE KURTARAMAZSINIZ. Yeniden erişim için uygulamayı tamamen sıfırlamanız gerekir."
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { riskAccepted = !riskAccepted }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Checkbox(
+                            checked = riskAccepted,
+                            onCheckedChange = { riskAccepted = it }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Riskleri anladım ve kabul ediyorum.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPinWarningDialog = false
+                        showPinCreateDialog = true
+                    },
+                    enabled = riskAccepted
+                ) { Text("Devam") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPinWarningDialog = false }) { Text("İptal") }
+            }
+        )
+    }
+
+    // 2. PIN Oluşturma Diyaloğu
+    if (showPinCreateDialog) {
+        var pinInput by remember { mutableStateOf("") }
+        var pinConfirm by remember { mutableStateOf("") }
+        var isError by remember { mutableStateOf(false) }
+
+        AlertDialog(
+            onDismissRequest = { showPinCreateDialog = false },
+            title = { Text("Yeni PIN Oluştur") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = pinInput,
+                        onValueChange = { if (it.length <= 4) { pinInput = it; isError = false } },
+                        label = { Text("4 Haneli PIN") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = pinConfirm,
+                        onValueChange = { if (it.length <= 4) { pinConfirm = it; isError = false } },
+                        label = { Text("PIN Tekrar") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        visualTransformation = PasswordVisualTransformation(),
+                        isError = isError,
+                        singleLine = true
+                    )
+                    if (isError) {
+                        Text(
+                            "PIN'ler eşleşmiyor veya 4 hane değil",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (pinInput.length == 4 && pinInput == pinConfirm) {
+                            pinManager.setPin(pinInput)
+                            isPinSet = true
+                            showPinCreateDialog = false
+                            Toast.makeText(context, "PIN başarıyla oluşturuldu!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            isError = true
+                        }
+                    }
+                ) { Text("Oluştur") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPinCreateDialog = false }) { Text("İptal") }
+            }
+        )
+    }
+
+    // 3. PIN Kaldırma Diyaloğu
+    if (showPinRemoveDialog) {
+        var currentPin by remember { mutableStateOf("") }
+        var isError by remember { mutableStateOf(false) }
+        var errorMsg by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showPinRemoveDialog = false },
+            title = { Text("Kilidi Kaldır") },
+            text = {
+                Column {
+                    Text("Uygulama kilidini kaldırmak için mevcut PIN'inizi girin:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = currentPin,
+                        onValueChange = { if (it.length <= 4) { currentPin = it; isError = false } },
+                        label = { Text("Mevcut PIN") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        visualTransformation = PasswordVisualTransformation(),
+                        isError = isError,
+                        singleLine = true
+                    )
+                    if (isError) {
+                        Text(
+                            errorMsg,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (pinManager.verifyPin(currentPin)) {
+                            pinManager.removePin()
+                            isPinSet = false
+                            showPinRemoveDialog = false
+                            Toast.makeText(context, "Uygulama kilidi kaldırıldı", Toast.LENGTH_SHORT).show()
+                        } else {
+                            isError = true
+                            val lockout = pinManager.getRemainingLockoutSeconds()
+                            if (lockout > 0) {
+                                errorMsg = "Çok fazla hatalı deneme. ${lockout}s bekleyin."
+                            } else {
+                                errorMsg = "Hatalı PIN girdiniz"
+                            }
+                        }
+                    }
+                ) { Text("Kaldır") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPinRemoveDialog = false }) { Text("İptal") }
             }
         )
     }

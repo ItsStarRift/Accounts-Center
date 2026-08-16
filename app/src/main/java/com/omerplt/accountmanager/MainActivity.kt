@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -23,19 +27,21 @@ import androidx.navigation.navArgument
 import com.omerplt.accountmanager.data.AppDatabase
 import com.omerplt.accountmanager.data.AppRepository
 import com.omerplt.accountmanager.navigation.Routes
+import com.omerplt.accountmanager.ui.screens.AccountDetailScreen
+import com.omerplt.accountmanager.ui.screens.AccountDetailViewModel
+import com.omerplt.accountmanager.ui.screens.AccountDetailViewModelFactory
 import com.omerplt.accountmanager.ui.screens.AccountListScreen
 import com.omerplt.accountmanager.ui.screens.AccountListViewModel
 import com.omerplt.accountmanager.ui.screens.AccountListViewModelFactory
 import com.omerplt.accountmanager.ui.screens.HomeScreen
 import com.omerplt.accountmanager.ui.screens.HomeViewModel
 import com.omerplt.accountmanager.ui.screens.HomeViewModelFactory
-import com.omerplt.accountmanager.ui.screens.AccountDetailScreen
-import com.omerplt.accountmanager.ui.screens.AccountDetailViewModel
-import com.omerplt.accountmanager.ui.screens.AccountDetailViewModelFactory
 import com.omerplt.accountmanager.ui.screens.SettingsScreen
 import com.omerplt.accountmanager.ui.screens.SettingsViewModel
 import com.omerplt.accountmanager.ui.screens.SettingsViewModelFactory
 import com.omerplt.accountmanager.ui.theme.HesapYoneticisiTheme
+import com.omerplt.accountmanager.util.PinManager
+import com.omerplt.accountmanager.ui.screens.LockScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,11 +50,27 @@ class MainActivity : ComponentActivity() {
 
         val database = AppDatabase.getInstance(applicationContext)
         val repository = AppRepository(database)
+        
+        // PinManager'i Başlatıyoruz
+        val pinManager = PinManager(applicationContext)
 
         setContent {
             HesapYoneticisiTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AppRoot(repository)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    // Eğer PIN kuruluysa false ile başlar ve kilit ekranına düşer
+                    var isUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
+
+                    if (isUnlocked) {
+                        AppRoot(repository)
+                    } else {
+                        LockScreen(
+                            pinManager = pinManager,
+                            onUnlocked = { isUnlocked = true }
+                        )
+                    }
                 }
             }
         }
@@ -68,10 +90,12 @@ private fun AppRoot(repository: AppRepository) {
         composable(
             route = Routes.HOME,
             exitTransition = {
-                slideOutHorizontally(targetOffsetX = { -it / 4 }, animationSpec = tween(TRANSITION_DURATION)) + fadeOut(tween(TRANSITION_DURATION))
+                slideOutHorizontally(targetOffsetX = { -it / 4 }, animationSpec = tween(TRANSITION_DURATION)) +
+                fadeOut(tween(TRANSITION_DURATION))
             },
             popEnterTransition = {
-                slideInHorizontally(initialOffsetX = { -it / 4 }, animationSpec = tween(TRANSITION_DURATION)) + fadeIn(tween(TRANSITION_DURATION))
+                slideInHorizontally(initialOffsetX = { -it / 4 }, animationSpec = tween(TRANSITION_DURATION)) +
+                fadeIn(tween(TRANSITION_DURATION))
             }
         ) {
             val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
