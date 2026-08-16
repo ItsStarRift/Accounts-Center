@@ -38,6 +38,7 @@ import com.omerplt.accountmanager.data.AppCategory
 import com.omerplt.accountmanager.data.AppWithAccountCount
 import com.omerplt.accountmanager.ui.components.AddAppDialog
 import com.omerplt.accountmanager.ui.theme.AccentOrange
+import androidx.compose.foundation.layout.safeDrawingPadding
 
 private enum class BottomTab { UYGULAMALAR, AYARLAR }
 
@@ -57,6 +58,7 @@ fun HomeScreen(
     var selectedTab by remember { mutableStateOf(BottomTab.UYGULAMALAR) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().safeDrawingPadding(),
         floatingActionButton = {
             if (selectedTab == BottomTab.UYGULAMALAR && !isSearchActive) {
                 val rotation by animateFloatAsState(
