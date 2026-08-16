@@ -24,11 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.omerplt.accountmanager.R
 import com.omerplt.accountmanager.util.PinManager
 
 private const val GITHUB_URL = "https://github.com/ItsStarRift/Accounts-Center"
@@ -46,27 +48,28 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     // Dil Seçimi Durumu
     var showLanguageDialog by remember { mutableStateOf(false) }
     val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-    val currentLangCode = prefs.getString("app_lang", "tr") ?: "tr"
-    val currentLangText = if (currentLangCode == "en") "English" else "Türkçe"
+    val currentLangCode = prefs.getString("app_lang", "system") ?: "system"
+    val currentLangText = when(currentLangCode) {
+        "en" -> stringResource(R.string.lang_en)
+        "tr" -> stringResource(R.string.lang_tr)
+        else -> stringResource(R.string.lang_system)
+    }
 
-    // PIN Kontrol Durumları
     val pinManager = remember { PinManager(context) }
     var isPinSet by remember { mutableStateOf(pinManager.isPinSet()) }
     var showPinWarningDialog by remember { mutableStateOf(false) }
     var showPinCreateDialog by remember { mutableStateOf(false) }
     var showPinRemoveDialog by remember { mutableStateOf(false) }
 
+    val exportSuccessMsg = stringResource(R.string.export_success)
+    val exportFailMsg = stringResource(R.string.export_fail)
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         if (uri != null) {
             scope.launch {
                 val success = viewModel.exportTo(context, uri)
-                Toast.makeText(
-                    context,
-                    if (success) "Veriler dışa aktarıldı" else "Dışa aktarma başarısız oldu",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(context, if (success) exportSuccessMsg else exportFailMsg, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -88,7 +91,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     ) {
         Spacer(Modifier.height(24.dp))
         Text(
-            "Ayarlar",
+            stringResource(R.string.settings_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -97,17 +100,14 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         SettingsGroup {
             SettingsRow(
                 icon = Icons.Default.Lock,
-                title = "Uygulama Kilidi",
-                subtitle = if (isPinSet) "Açık" else "Kapalı",
-                onClick = { 
-                    if (isPinSet) showPinRemoveDialog = true 
-                    else showPinWarningDialog = true 
-                }
+                title = stringResource(R.string.app_lock),
+                subtitle = if (isPinSet) stringResource(R.string.on) else stringResource(R.string.off),
+                onClick = { if (isPinSet) showPinRemoveDialog = true else showPinWarningDialog = true }
             )
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Language,
-                title = "Dil / Language",
+                title = stringResource(R.string.language),
                 subtitle = currentLangText,
                 onClick = { showLanguageDialog = true }
             )
@@ -118,15 +118,15 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         SettingsGroup {
             SettingsRow(
                 icon = Icons.Default.Upload,
-                title = "Verileri dışa aktar",
-                subtitle = "Tüm verileri .json dosyası olarak indir",
-                onClick = { exportLauncher.launch("hesap-yoneticisi-yedek.json") }
+                title = stringResource(R.string.export_data),
+                subtitle = stringResource(R.string.export_data_sub),
+                onClick = { exportLauncher.launch("account-manager-backup.json") }
             )
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Download,
-                title = "Verileri içe aktar",
-                subtitle = "Bir .json yedeğinden geri yükle",
+                title = stringResource(R.string.import_data),
+                subtitle = stringResource(R.string.import_data_sub),
                 onClick = { importLauncher.launch(arrayOf("application/json")) }
             )
         }
@@ -136,44 +136,51 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         SettingsGroup {
             SettingsRow(
                 icon = Icons.Default.Email,
-                title = "Geri Bildirim Gönder",
+                title = stringResource(R.string.feedback),
                 subtitle = FEEDBACK_EMAIL,
                 onClick = {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:$FEEDBACK_EMAIL")
-                        putExtra(Intent.EXTRA_SUBJECT, "Hesap Yöneticisi - Geri Bildirim")
+                        putExtra(Intent.EXTRA_SUBJECT, "Account Manager Feedback")
                     }
-                    context.startActivity(Intent.createChooser(intent, "Geri bildirim gönder"))
+                    context.startActivity(Intent.createChooser(intent, "Send Feedback"))
                 }
             )
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Code,
-                title = "Github Sayfası",
-                subtitle = "Kaynak kodu görüntüle",
-                onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
-                }
+                title = stringResource(R.string.github_page),
+                subtitle = stringResource(R.string.github_sub),
+                onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL))) }
             )
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Info,
-                title = "Uygulama Hakkında",
-                subtitle = "Sürüm $APP_VERSION",
+                title = stringResource(R.string.about_app),
+                subtitle = stringResource(R.string.version, APP_VERSION),
                 onClick = { showAboutDialog = true }
             )
         }
-        
         Spacer(Modifier.height(96.dp))
     }
 
-    // Dil Seçimi Diyaloğu
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text("Dil Seçimi / Language") },
+            title = { Text(stringResource(R.string.language)) },
             text = {
                 Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                prefs.edit().putString("app_lang", "system").apply()
+                                showLanguageDialog = false
+                                (context as? Activity)?.recreate()
+                            }
+                            .padding(16.dp)
+                    ) { Text(stringResource(R.string.lang_system), style = MaterialTheme.typography.bodyLarge) }
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -183,9 +190,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                 (context as? Activity)?.recreate()
                             }
                             .padding(16.dp)
-                    ) {
-                        Text("Türkçe", style = MaterialTheme.typography.bodyLarge)
-                    }
+                    ) { Text(stringResource(R.string.lang_tr), style = MaterialTheme.typography.bodyLarge) }
                     Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     Row(
                         modifier = Modifier
@@ -196,46 +201,31 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                 (context as? Activity)?.recreate()
                             }
                             .padding(16.dp)
-                    ) {
-                        Text("English", style = MaterialTheme.typography.bodyLarge)
-                    }
+                    ) { Text(stringResource(R.string.lang_en), style = MaterialTheme.typography.bodyLarge) }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) { Text("İptal") }
+                TextButton(onClick = { showLanguageDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
 
-    // Hakkında Diyaloğu
     if (showAboutDialog) {
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
-            title = { Text("Hesap Yöneticisi") },
-            text = {
-                Text(
-                    "Sürüm $APP_VERSION\n\n" +
-                    "Tüm verileriniz cihazınızda şifreli olarak saklanır, " +
-                    "hiçbir veri sunucuya gönderilmez."
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showAboutDialog = false }) { Text("Kapat") }
-            }
+            title = { Text(stringResource(R.string.app_name)) },
+            text = { Text(stringResource(R.string.version, APP_VERSION) + "\n\n" + stringResource(R.string.about_text)) },
+            confirmButton = { TextButton(onClick = { showAboutDialog = false }) { Text(stringResource(R.string.close)) } }
         )
     }
 
-    // İçe Aktarma Onay Diyaloğu
+    val importSuccessMsg = stringResource(R.string.import_success)
+    val importFailMsg = stringResource(R.string.import_fail)
     if (showImportConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showImportConfirmDialog = false },
-            title = { Text("Verileri içe aktar") },
-            text = {
-                Text(
-                    "Bu işlem, cihazınızdaki TÜM mevcut verilerin yerine seçtiğiniz " +
-                    "yedeği koyacak. Şu anki veriler silinecek ve geri alınamayacak. Devam edilsin mi?"
-                )
-            },
+            title = { Text(stringResource(R.string.import_title)) },
+            text = { Text(stringResource(R.string.import_warning)) },
             confirmButton = {
                 TextButton(onClick = {
                     val uri = pendingImportUri
@@ -243,83 +233,59 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     if (uri != null) {
                         scope.launch {
                             val success = viewModel.importFrom(context, uri)
-                            Toast.makeText(
-                                context,
-                                if (success) "Veriler içe aktarıldı" else "İçe aktarma başarısız oldu",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, if (success) importSuccessMsg else importFailMsg, Toast.LENGTH_SHORT).show()
                         }
                     }
-                }) { Text("Evet, değiştir") }
+                }) { Text(stringResource(R.string.yes_replace)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showImportConfirmDialog = false }) { Text("İptal") }
-            }
+            dismissButton = { TextButton(onClick = { showImportConfirmDialog = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 
-    // 1. PIN Kurulum Öncesi Güvenlik Uyarısı
     if (showPinWarningDialog) {
         var riskAccepted by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { showPinWarningDialog = false },
-            title = { Text("Dikkat: Kurtarılamaz Veri Kaybı", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
+            title = { Text(stringResource(R.string.pin_warning_title), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
             text = {
                 Column {
-                    Text(
-                        "Uygulama tamamen çevrimdışı çalışır ve veritabanı şifrelidir.\n\n" +
-                        "Eğer PIN kodunuzu unutursanız verilerinizi HİÇBİR ŞEKİLDE KURTARAMAZSINIZ. Yeniden erişim için uygulamayı tamamen sıfırlamanız gerekir."
-                    )
+                    Text(stringResource(R.string.pin_warning_text))
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { riskAccepted = !riskAccepted }
-                            .padding(vertical = 4.dp)
+                        modifier = Modifier.fillMaxWidth().clickable { riskAccepted = !riskAccepted }.padding(vertical = 4.dp)
                     ) {
-                        Checkbox(
-                            checked = riskAccepted,
-                            onCheckedChange = { riskAccepted = it }
-                        )
+                        Checkbox(checked = riskAccepted, onCheckedChange = { riskAccepted = it })
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Riskleri anladım ve kabul ediyorum.",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Text(stringResource(R.string.pin_risk_accept), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             },
             confirmButton = {
                 TextButton(
-                    onClick = {
-                        showPinWarningDialog = false
-                        showPinCreateDialog = true
-                    },
+                    onClick = { showPinWarningDialog = false; showPinCreateDialog = true },
                     enabled = riskAccepted
-                ) { Text("Devam") }
+                ) { Text(stringResource(R.string.continue_btn)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showPinWarningDialog = false }) { Text("İptal") }
-            }
+            dismissButton = { TextButton(onClick = { showPinWarningDialog = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 
-    // 2. PIN Oluşturma Diyaloğu
     if (showPinCreateDialog) {
         var pinInput by remember { mutableStateOf("") }
         var pinConfirm by remember { mutableStateOf("") }
         var isError by remember { mutableStateOf(false) }
+        val successMsg = stringResource(R.string.pin_success)
 
         AlertDialog(
             onDismissRequest = { showPinCreateDialog = false },
-            title = { Text("Yeni PIN Oluştur") },
+            title = { Text(stringResource(R.string.pin_create_title)) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = pinInput,
                         onValueChange = { if (it.length <= 4) { pinInput = it; isError = false } },
-                        label = { Text("4 Haneli PIN") },
+                        label = { Text(stringResource(R.string.pin_4_digits)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true
@@ -328,7 +294,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     OutlinedTextField(
                         value = pinConfirm,
                         onValueChange = { if (it.length <= 4) { pinConfirm = it; isError = false } },
-                        label = { Text("PIN Tekrar") },
+                        label = { Text(stringResource(R.string.pin_repeat)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation(),
                         isError = isError,
@@ -336,7 +302,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     )
                     if (isError) {
                         Text(
-                            "PIN'ler eşleşmiyor veya 4 hane değil",
+                            stringResource(R.string.pin_mismatch),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 4.dp)
@@ -351,36 +317,37 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             pinManager.setPin(pinInput)
                             isPinSet = true
                             showPinCreateDialog = false
-                            Toast.makeText(context, "PIN başarıyla oluşturuldu!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
                         } else {
                             isError = true
                         }
                     }
-                ) { Text("Oluştur") }
+                ) { Text(stringResource(R.string.create)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showPinCreateDialog = false }) { Text("İptal") }
-            }
+            dismissButton = { TextButton(onClick = { showPinCreateDialog = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 
-    // 3. PIN Kaldırma Diyaloğu
     if (showPinRemoveDialog) {
         var currentPin by remember { mutableStateOf("") }
         var isError by remember { mutableStateOf(false) }
         var errorMsg by remember { mutableStateOf("") }
+        
+        val removeSuccessMsg = stringResource(R.string.pin_remove_success)
+        val incorrectPinMsg = stringResource(R.string.pin_incorrect)
+        val waitMsgTemplate = stringResource(R.string.pin_too_many_attempts)
 
         AlertDialog(
             onDismissRequest = { showPinRemoveDialog = false },
-            title = { Text("Kilidi Kaldır") },
+            title = { Text(stringResource(R.string.pin_remove_title)) },
             text = {
                 Column {
-                    Text("Uygulama kilidini kaldırmak için mevcut PIN'inizi girin:")
+                    Text(stringResource(R.string.pin_remove_text))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = currentPin,
                         onValueChange = { if (it.length <= 4) { currentPin = it; isError = false } },
-                        label = { Text("Mevcut PIN") },
+                        label = { Text(stringResource(R.string.current_pin)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation(),
                         isError = isError,
@@ -403,22 +370,20 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             pinManager.removePin()
                             isPinSet = false
                             showPinRemoveDialog = false
-                            Toast.makeText(context, "Uygulama kilidi kaldırıldı", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, removeSuccessMsg, Toast.LENGTH_SHORT).show()
                         } else {
                             isError = true
                             val lockout = pinManager.getRemainingLockoutSeconds()
                             if (lockout > 0) {
-                                errorMsg = "Çok fazla hatalı deneme. ${lockout}s bekleyin."
+                                errorMsg = waitMsgTemplate.format(lockout)
                             } else {
-                                errorMsg = "Hatalı PIN girdiniz"
+                                errorMsg = incorrectPinMsg
                             }
                         }
                     }
-                ) { Text("Kaldır") }
+                ) { Text(stringResource(R.string.remove)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showPinRemoveDialog = false }) { Text("İptal") }
-            }
+            dismissButton = { TextButton(onClick = { showPinRemoveDialog = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }
@@ -430,55 +395,29 @@ private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        content()
-    }
+    ) { content() }
 }
 
 @Composable
 private fun SettingsDivider() {
-    Divider(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-    )
+    Divider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 }
 
 @Composable
-private fun SettingsRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
+private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+            modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-        }
+        ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         }
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        )
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
     }
 }
