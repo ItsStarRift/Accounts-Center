@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -173,7 +174,7 @@ private fun AppGroupedList(
                 Spacer(Modifier.height(8.dp))
             }
         }
-        item { Spacer(Modifier.height(96.dp)) } // FAB'ın altında kalmasın diye
+        item { Spacer(Modifier.height(96.dp)) }
     }
 }
 
@@ -325,7 +326,8 @@ private fun AppIconCircle(app: AppWithAccountCount) {
             AsyncImage(
                 model = app.iconPath,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize().clip(CircleShape)
+                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                contentScale = ContentScale.Crop // <-- Burası eklendi
             )
         } else {
             Text(

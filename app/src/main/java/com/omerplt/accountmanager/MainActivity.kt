@@ -53,12 +53,15 @@ class MainActivity : ComponentActivity() {
 
         // Dil ayarını yükle
         val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val savedLang = prefs.getString("app_lang", "tr") ?: "tr"
-        val locale = Locale(savedLang)
-        Locale.setDefault(locale)
-        val config = resources.configuration
-        config.setLocale(locale)
-        resources.updateConfiguration(config, resources.displayMetrics)
+        val savedLang = prefs.getString("app_lang", "system") ?: "system"
+        
+        if (savedLang != "system") {
+            val locale = Locale(savedLang)
+            Locale.setDefault(locale)
+            val config = resources.configuration
+            config.setLocale(locale)
+            resources.updateConfiguration(config, resources.displayMetrics)
+        }
 
         val database = AppDatabase.getInstance(applicationContext)
         val repository = AppRepository(database)

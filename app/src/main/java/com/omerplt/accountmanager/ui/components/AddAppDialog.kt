@@ -1,11 +1,9 @@
 package com.omerplt.accountmanager.ui.components
 
 import android.Manifest
-import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,10 +26,7 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import com.omerplt.accountmanager.R
 import com.omerplt.accountmanager.data.AppCategory
-import com.omerplt.accountmanager.ui.components.AnimatedDialogEntrance
 import com.omerplt.accountmanager.util.CameraFileHelper
-import com.omerplt.accountmanager.util.IconFetcher
-import kotlinx.coroutines.launch
 
 @Composable
 fun AddAppDialog(
@@ -39,7 +34,6 @@ fun AddAppDialog(
     onSave: (name: String, category: AppCategory, iconPath: String?) -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     var name by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<AppCategory?>(null) }
@@ -47,8 +41,6 @@ fun AddAppDialog(
     var showNameWarning by remember { mutableStateOf(false) }
 
     var iconPath by remember { mutableStateOf<String?>(null) }
-    var isFetchingIcon by remember { mutableStateOf(false) }
-    var fetchedPreview by remember { mutableStateOf<Bitmap?>(null) }
     var showPickerSheet by remember { mutableStateOf(false) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -80,199 +72,155 @@ fun AddAppDialog(
         }
     }
 
-    fun startIconSearch() {
-        if (name.isBlank()) {
-            showNameWarning = true
-            return
-        }
-        showNameWarning = false
-        scope.launch {
-            if (IconFetcher.isOnline(context)) {
-                isFetchingIcon = true
-                val bitmap = IconFetcher.tryFetchPreview(name)
-                isFetchingIcon = false
-                if (bitmap != null) {
-                    fetchedPreview = bitmap
-                } else {
-                    showPickerSheet = true
-                }
-            } else {
-                showPickerSheet = true
-            }
-        }
-    }
-
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         AnimatedDialogEntrance {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
 
-                // Üst bar: X  Liste Oluştur ............ Kaydet
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
-                    }
-                    Text(
-                        text = stringResource(R.string.create_list_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f).padding(start = 4.dp)
-                    )
-                    Button(
-                        onClick = {
-                            if (selectedCategory == null) {
-                                showCategoryError = true
-                            } else {
-                                onSave(name, selectedCategory!!, iconPath)
-                                onDismiss()
-                            }
-                        },
-                        shape = RoundedCornerShape(20.dp),
-                        enabled = name.isNotBlank()
+                    // Üst bar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.save_btn))
-                    }
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(Modifier.height(24.dp))
-
-                    // İkon dairesi + küçük (+) rozeti
-                    Box(contentAlignment = Alignment.BottomEnd) {
-                        Box(
-                            modifier = Modifier
-                                .size(96.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .clickable { startIconSearch() },
-                            contentAlignment = Alignment.Center
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
+                        }
+                        Text(
+                            text = stringResource(R.string.create_list_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f).padding(start = 4.dp)
+                        )
+                        Button(
+                            onClick = {
+                                if (selectedCategory == null) {
+                                    showCategoryError = true
+                                } else {
+                                    onSave(name, selectedCategory!!, iconPath)
+                                    onDismiss()
+                                }
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            enabled = name.isNotBlank()
                         ) {
-                            when {
-                                isFetchingIcon -> CircularProgressIndicator(modifier = Modifier.size(28.dp))
-                                iconPath != null -> AsyncImage(
-                                    model = iconPath,
-                                    contentDescription = stringResource(R.string.cd_selected_icon),
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape)
-                                )
-                                else -> Icon(
-                                    imageVector = Icons.Default.QuestionMark,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(36.dp)
+                            Text(stringResource(R.string.save_btn))
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(Modifier.height(24.dp))
+
+                        // İkon dairesi + küçük (+) rozeti (Tek Tıklama Alanı)
+                        Box(
+                            contentAlignment = Alignment.BottomEnd,
+                            modifier = Modifier.clickable {
+                                if (name.isBlank()) {
+                                    showNameWarning = true
+                                } else {
+                                    showNameWarning = false
+                                    showPickerSheet = true
+                                }
+                            }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(96.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (iconPath != null) {
+                                    AsyncImage(
+                                        model = iconPath,
+                                        contentDescription = stringResource(R.string.cd_selected_icon),
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.QuestionMark,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.cd_add_icon),
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.secondaryContainer)
-                                .clickable { startIconSearch() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(R.string.cd_add_icon),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
 
-                    if (showNameWarning) {
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            stringResource(R.string.enter_name_first),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    Spacer(Modifier.height(24.dp))
-
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text(stringResource(R.string.dialog_name_label)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    // Uygulama / Oyun segmentli seçim
-                    SingleChoiceSegment(
-                        selected = selectedCategory,
-                        onSelect = {
-                            selectedCategory = it
-                            showCategoryError = false
-                        }
-                    )
-
-                    if (showCategoryError) {
-                        Spacer(Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
+                        if (showNameWarning) {
+                            Spacer(Modifier.height(6.dp))
                             Text(
-                                stringResource(R.string.please_select_category),
+                                stringResource(R.string.enter_name_first),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text(stringResource(R.string.dialog_name_label)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        SingleChoiceSegment(
+                            selected = selectedCategory,
+                            onSelect = {
+                                selectedCategory = it
+                                showCategoryError = false
+                            }
+                        )
+
+                        if (showCategoryError) {
+                            Spacer(Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    stringResource(R.string.please_select_category),
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
-        }
     }
 
-    // Otomatik bulunan ikonu onaylatma penceresi
-    fetchedPreview?.let { bitmap ->
-        AlertDialog(
-            onDismissRequest = { fetchedPreview = null },
-            title = { Text(stringResource(R.string.is_this_icon)) },
-            text = {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier.size(96.dp).clip(CircleShape)
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        iconPath = IconFetcher.saveBitmapToInternalStorage(context, bitmap)
-                        fetchedPreview = null
-                    }
-                }) { Text(stringResource(R.string.yes)) }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    fetchedPreview = null
-                    showPickerSheet = true
-                }) { Text(stringResource(R.string.no)) }
-            }
-        )
-    }
-
-    // Galeri / Kamera seçim penceresi
     if (showPickerSheet) {
         AlertDialog(
             onDismissRequest = { showPickerSheet = false },

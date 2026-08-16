@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -105,20 +106,23 @@ fun AddAccountDialog(
                     ) {
                         Spacer(Modifier.height(24.dp))
 
-                        Box(contentAlignment = Alignment.BottomEnd) {
+                        Box(
+                            contentAlignment = Alignment.BottomEnd,
+                            modifier = Modifier.clickable { showPickerSheet = true }
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(96.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
-                                    .clickable { showPickerSheet = true },
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (iconPath != null) {
                                     AsyncImage(
                                         model = iconPath,
                                         contentDescription = stringResource(R.string.cd_selected_icon),
-                                        modifier = Modifier.fillMaxSize().clip(CircleShape)
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
                                     )
                                 } else {
                                     Icon(
@@ -133,8 +137,7 @@ fun AddAccountDialog(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                                    .clickable { showPickerSheet = true },
+                                    .background(MaterialTheme.colorScheme.secondaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
