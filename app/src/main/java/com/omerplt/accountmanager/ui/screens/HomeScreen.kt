@@ -40,7 +40,8 @@ private enum class BottomTab { UYGULAMALAR, AYARLAR }
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
-    onAppClick: (Long) -> Unit
+    onAppClick: (Long) -> Unit,
+    settingsContent: @Composable () -> Unit
 ) {
     val groups by viewModel.alphabeticalGroups.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
@@ -106,10 +107,7 @@ fun HomeScreen(
                     }
                 }
                 BottomTab.AYARLAR -> {
-                    // Ayarlar ekranı sonraki aşamada eklenecek.
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Ayarlar (yakında)")
-                    }
+                    settingsContent()
                 }
             }
         }
