@@ -1,5 +1,6 @@
 package com.omerplt.accountmanager
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,16 +43,26 @@ import com.omerplt.accountmanager.ui.screens.SettingsViewModelFactory
 import com.omerplt.accountmanager.ui.theme.HesapYoneticisiTheme
 import com.omerplt.accountmanager.util.PinManager
 import com.omerplt.accountmanager.ui.screens.LockScreen
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Dil ayarını yükle
+        val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        val savedLang = prefs.getString("app_lang", "tr") ?: "tr"
+        val locale = Locale(savedLang)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        resources.updateConfiguration(config, resources.displayMetrics)
+
         val database = AppDatabase.getInstance(applicationContext)
         val repository = AppRepository(database)
         
-        // PinManager'i Başlatıyoruz
         val pinManager = PinManager(applicationContext)
 
         setContent {
@@ -60,7 +71,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Eğer PIN kuruluysa false ile başlar ve kilit ekranına düşer
                     var isUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
 
                     if (isUnlocked) {

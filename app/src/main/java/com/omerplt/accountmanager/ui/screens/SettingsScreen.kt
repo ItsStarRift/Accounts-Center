@@ -1,5 +1,7 @@
 package com.omerplt.accountmanager.ui.screens
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -31,7 +33,7 @@ import com.omerplt.accountmanager.util.PinManager
 
 private const val GITHUB_URL = "https://github.com/ItsStarRift/Accounts-Center"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
-private const val APP_VERSION = "0.1-alpha"
+private const val APP_VERSION = "1.0.0"
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
@@ -40,6 +42,12 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     var showAboutDialog by remember { mutableStateOf(false) }
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+    
+    // Dil Seçimi Durumu
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+    val currentLangCode = prefs.getString("app_lang", "tr") ?: "tr"
+    val currentLangText = if (currentLangCode == "en") "English" else "Türkçe"
 
     // PIN Kontrol Durumları
     val pinManager = remember { PinManager(context) }
@@ -99,11 +107,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Language,
-                title = "Dil",
-                subtitle = "Sistem varsayılanı (Türkçe)",
-                onClick = {
-                    Toast.makeText(context, "Şu an sadece Türkçe destekleniyor", Toast.LENGTH_SHORT).show()
-                }
+                title = "Dil / Language",
+                subtitle = currentLangText,
+                onClick = { showLanguageDialog = true }
             )
         }
 
@@ -161,6 +167,46 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         Spacer(Modifier.height(96.dp))
     }
 
+    // Dil Seçimi Diyaloğu
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text("Dil Seçimi / Language") },
+            text = {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                prefs.edit().putString("app_lang", "tr").apply()
+                                showLanguageDialog = false
+                                (context as? Activity)?.recreate()
+                            }
+                            .padding(16.dp)
+                    ) {
+                        Text("Türkçe", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                prefs.edit().putString("app_lang", "en").apply()
+                                showLanguageDialog = false
+                                (context as? Activity)?.recreate()
+                            }
+                            .padding(16.dp)
+                    ) {
+                        Text("English", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) { Text("İptal") }
+            }
+        )
+    }
+
     // Hakkında Diyaloğu
     if (showAboutDialog) {
         AlertDialog(
@@ -212,7 +258,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         )
     }
 
-    // 1. PIN Kurulum Öncesi Güvenlik Uyarısı (Senin İstediğin)
+    // 1. PIN Kurulum Öncesi Güvenlik Uyarısı
     if (showPinWarningDialog) {
         var riskAccepted by remember { mutableStateOf(false) }
         AlertDialog(
