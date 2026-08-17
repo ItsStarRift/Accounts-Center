@@ -33,7 +33,19 @@ jobs:
     - name: Build Both APKs
       run: ./gradlew assembleDebug assembleRelease -x lint -x test
 
-    # Sorunlu eklenti yerine Native (Yerel) İmzalama Adımı
+    - name: Determine Prerelease Status
+      if: startsWith(github.ref, 'refs/tags/')
+      id: prerelease_check
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        if [[ "$TAG_NAME" == *"beta"* || "$TAG_NAME" == *"alpha"* || "$TAG_NAME" == *"rc"* ]]; then
+          echo "Bu bir on-surum (pre-release) olarak isaretlenecek: $TAG_NAME"
+          echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "Bu bir stable surum olarak isaretlenecek: $TAG_NAME"
+          echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Sign Release APK (Native)
       if: startsWith(github.ref, 'refs/tags/')
       env:
@@ -42,17 +54,10 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
-        # 1. Base64 şifreyi çözüp imza dosyasını oluştur
         echo $KEYSTORE_BASE64 | base64 --decode > release-key.jks
-        
-        # 2. Sunucudaki en güncel Android Build Tools sürümünü bul
         export BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | tail -1)
-        
-        # 3. APK'yı optimize et (Zipalign)
         $BUILD_TOOLS/zipalign -v -p 4 app/build/outputs/apk/release/app-release-unsigned.apk app-release-aligned.apk
-        
-        # 4. APK'yı imzala (Apksigner)
-        $BUILD_TOOLS/apksigner sign --ks release-key.jks --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --ks-key-alias $KEY_ALIAS --out Accounts-Center-Stable.apk app-release-aligned.apk
+        $BUILD_TOOLS/apksigner sign --ks release-key.jks --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --ks-key-alias $KEY_ALIAS --out "Accounts-Center-${{ github.ref_name }}.apk" app-release-aligned.apk
 
     - name: Upload Debug Artifact (For Normal Push)
       if: "!startsWith(github.ref, 'refs/tags/')"
@@ -65,8 +70,9 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
+        prerelease: ${{ steps.prerelease_check.outputs.is_prerelease }}
         files: |
-          Accounts-Center-Stable.apk
+          Accounts-Center-${{ github.ref_name }}.apk
           app/build/outputs/apk/debug/app-debug.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
