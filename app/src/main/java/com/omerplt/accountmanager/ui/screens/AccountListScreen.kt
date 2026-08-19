@@ -17,6 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,49 +45,65 @@ fun AccountListScreen(
     val app by viewModel.app.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (app?.iconPath != null) {
-                                AsyncImage(
-                                    model = app?.iconPath,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape)
-                                )
-                            } else {
-                                Text(
-                                    text = app?.name?.take(1)?.uppercase() ?: "",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold
-                                )
+            if (selectedIds.isEmpty()) {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (app?.iconPath != null) {
+                                    AsyncImage(
+                                        model = app?.iconPath,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape)
+                                    )
+                                } else {
+                                    Text(
+                                        text = app?.name?.take(1)?.uppercase() ?: "",
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(app?.name ?: "")
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(app?.name ?: "")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                        }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
-                    }
-                }
-            )
+                )
+            } else {
+                SelectionTopBar(
+                    count = selectedIds.size,
+                    onClose = { selectedIds = emptySet() },
+                    onDelete = {
+                        accounts.filter { it.id in selectedIds }
+                            .forEach { viewModel.deleteAccount(it) }
+                        selectedIds = emptySet()
+                    },
+                    onEdit = { /* TODO: bir sonraki adımda AddAccountDialog edit modu bağlanacak */ }
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_account))
+            if (selectedIds.isEmpty()) {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_account))
+                }
             }
         }
     ) { padding ->
@@ -105,6 +124,7 @@ fun AccountListScreen(
                         )
                     }
                 } else {
+                    val selectionMode = selectedIds.isNotEmpty()
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp)
@@ -112,8 +132,16 @@ fun AccountListScreen(
                         items(accounts, key = { it.id }) { account ->
                             AccountRow(
                                 account = account,
-                                onClick = { onAccountClick(account.id) },
-                                onDelete = { viewModel.deleteAccount(account) }
+                                selectionMode = selectionMode,
+                                isSelected = account.id in selectedIds,
+                                onClick = {
+                                    if (selectionMode) {
+                                        selectedIds = if (account.id in selectedIds) selectedIds - account.id else selectedIds + account.id
+                                    } else {
+                                        onAccountClick(account.id)
+                                    }
+                                },
+                                onLongClick = { selectedIds = setOf(account.id) }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -135,11 +163,48 @@ fun AccountListScreen(
     }
 }
 
+@Composable
+private fun SelectionTopBar(
+    count: Int,
+    onClose: () -> Unit,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                }
+                Text(
+                    text = count.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        actions = {
+            if (count == 1) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+                }
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_confirm))
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AccountRow(account: AccountItem, onClick: () -> Unit, onDelete: () -> Unit) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
+fun AccountRow(
+    account: AccountItem,
+    selectionMode: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,7 +212,7 @@ fun AccountRow(account: AccountItem, onClick: () -> Unit, onDelete: () -> Unit) 
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = { showDeleteConfirm = true }
+                onLongClick = onLongClick
             )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -179,24 +244,11 @@ fun AccountRow(account: AccountItem, onClick: () -> Unit, onDelete: () -> Unit) 
         Text(
             text = account.name,
             fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
         )
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.delete_item_title, account.name)) },
-            text = { Text(stringResource(R.string.delete_account_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete()
-                    showDeleteConfirm = false
-                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
+        if (selectionMode) {
+            Checkbox(checked = isSelected, onCheckedChange = { onClick() })
+        }
     }
 }
