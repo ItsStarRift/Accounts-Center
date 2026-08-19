@@ -3,6 +3,7 @@ package com.omerplt.accountmanager.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omerplt.accountmanager.data.AppCategory
+import com.omerplt.accountmanager.data.AppItem
 import com.omerplt.accountmanager.data.AppRepository
 import com.omerplt.accountmanager.data.AppWithAccountCount
 import kotlinx.coroutines.flow.MutableStateFlow
