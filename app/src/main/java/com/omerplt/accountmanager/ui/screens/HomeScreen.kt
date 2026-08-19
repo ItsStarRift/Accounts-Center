@@ -124,6 +124,20 @@ fun HomeScreen(
                                     }
                                 )
                             }
+
+                            if (!isSearchActive) {
+                                AppGroupedList(
+                                    groups = groups,
+                                    onAppClick = onAppClick,
+                                    selectedIds = selectedIds,
+                                    onToggleSelect = { id ->
+                                        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                                    },
+                                    onEnterSelection = { id ->
+                                        selectedIds = setOf(id)
+                                    }
+                                )
+                            }
                         } else {
                             SelectionBar(
                                 count = selectedIds.size,
@@ -135,20 +149,33 @@ fun HomeScreen(
                                 },
                                 onEdit = { showEditDialog = true }
                             )
-                        }
 
-                        if (!isSearchActive) {
-                            AppGroupedList(
-                                groups = groups,
-                                onAppClick = onAppClick,
-                                selectedIds = selectedIds,
-                                onToggleSelect = { id ->
-                                    selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
-                                },
-                                onEnterSelection = { id ->
-                                    selectedIds = setOf(id)
-                                }
-                            )
+                            if (isSearchActive) {
+                                SearchResultsList(
+                                    results = searchResults,
+                                    query = query,
+                                    onAppClick = { },
+                                    selectedIds = selectedIds,
+                                    onToggleSelect = { id ->
+                                        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                                    },
+                                    onEnterSelection = { id ->
+                                        selectedIds = setOf(id)
+                                    }
+                                )
+                            } else {
+                                AppGroupedList(
+                                    groups = groups,
+                                    onAppClick = onAppClick,
+                                    selectedIds = selectedIds,
+                                    onToggleSelect = { id ->
+                                        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                                    },
+                                    onEnterSelection = { id ->
+                                        selectedIds = setOf(id)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
