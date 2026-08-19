@@ -30,6 +30,12 @@ class AccountListViewModel(
         }
     }
 
+    fun updateAccount(id: Long, name: String, iconPath: String?) {
+        viewModelScope.launch {
+            repository.updateAccount(AccountItem(id = id, appId = appId, name = name, iconPath = iconPath))
+        }
+    }
+
     fun deleteAccount(account: AccountItem) {
         viewModelScope.launch {
             repository.deleteAccount(account)

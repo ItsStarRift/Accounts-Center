@@ -53,6 +53,12 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
         }
     }
 
+    fun updateApp(id: Long, name: String, category: AppCategory, iconPath: String?) {
+        viewModelScope.launch {
+            repository.updateApp(AppItem(id = id, name = name, category = category, iconPath = iconPath))
+        }
+    }
+
     fun deleteApp(app: AppWithAccountCount) {
         viewModelScope.launch {
             repository.deleteApp(

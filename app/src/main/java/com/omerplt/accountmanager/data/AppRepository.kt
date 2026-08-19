@@ -19,6 +19,7 @@ class AppRepository(private val database: AppDatabase) {
     }
 
     suspend fun deleteApp(app: AppItem) = database.appDao().deleteApp(app)
+    suspend fun updateApp(app: AppItem) = database.appDao().updateApp(app)
 
     fun getAccountsForApp(appId: Long): Flow<List<AccountItem>> =
         database.accountDao().getAccountsForApp(appId)
@@ -30,6 +31,7 @@ class AppRepository(private val database: AppDatabase) {
     }
 
     suspend fun deleteAccount(account: AccountItem) = database.accountDao().deleteAccount(account)
+    suspend fun updateAccount(account: AccountItem) = database.accountDao().updateAccount(account)
 
     fun getFieldsForAccount(accountId: Long): Flow<List<AccountField>> =
         database.accountFieldDao().getFieldsForAccount(accountId)

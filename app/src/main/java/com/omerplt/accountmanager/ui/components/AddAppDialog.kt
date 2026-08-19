@@ -31,16 +31,20 @@ import com.omerplt.accountmanager.util.CameraFileHelper
 @Composable
 fun AddAppDialog(
     onDismiss: () -> Unit,
-    onSave: (name: String, category: AppCategory, iconPath: String?) -> Unit
+    onSave: (name: String, category: AppCategory, iconPath: String?) -> Unit,
+    existingName: String? = null,
+    existingCategory: AppCategory? = null,
+    existingIconPath: String? = null
 ) {
     val context = LocalContext.current
+    val isEditMode = existingName != null
 
-    var name by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<AppCategory?>(null) }
+    var name by remember { mutableStateOf(existingName ?: "") }
+    var selectedCategory by remember { mutableStateOf(existingCategory) }
     var showCategoryError by remember { mutableStateOf(false) }
     var showNameWarning by remember { mutableStateOf(false) }
 
-    var iconPath by remember { mutableStateOf<String?>(null) }
+    var iconPath by remember { mutableStateOf(existingIconPath) }
     var showPickerSheet by remember { mutableStateOf(false) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -91,7 +95,7 @@ fun AddAppDialog(
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                         }
                         Text(
-                            text = stringResource(R.string.create_list_title),
+                            text = if (isEditMode) stringResource(R.string.edit_app_title) else stringResource(R.string.create_list_title),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f).padding(start = 4.dp)
                         )

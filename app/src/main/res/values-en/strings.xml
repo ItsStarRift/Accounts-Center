@@ -93,4 +93,6 @@
     <string name="next_btn">Next</string>
     <string name="preset_password">Password</string>
     <string name="edit">Edit</string>
+    <string name="edit_app_title">Edit App</string>
+    <string name="edit_account_title">Edit Account</string>
 </resources>

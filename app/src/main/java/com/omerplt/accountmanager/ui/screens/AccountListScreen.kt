@@ -45,6 +45,7 @@ fun AccountListScreen(
     val app by viewModel.app.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
     Scaffold(
@@ -95,7 +96,7 @@ fun AccountListScreen(
                             .forEach { viewModel.deleteAccount(it) }
                         selectedIds = emptySet()
                     },
-                    onEdit = { /* TODO: bir sonraki adımda AddAccountDialog edit modu bağlanacak */ }
+                    onEdit = { showEditDialog = true }
                 )
             }
         },
@@ -159,6 +160,22 @@ fun AccountListScreen(
                     showAddDialog = false
                 }
             )
+        }
+
+        if (showEditDialog) {
+            val editingAccount = accounts.find { it.id in selectedIds }
+            if (editingAccount != null) {
+                AddAccountDialog(
+                    onDismiss = { showEditDialog = false },
+                    onSave = { name, iconPath ->
+                        viewModel.updateAccount(editingAccount.id, name, iconPath)
+                        showEditDialog = false
+                        selectedIds = emptySet()
+                    },
+                    existingName = editingAccount.name,
+                    existingIconPath = editingAccount.iconPath
+                )
+            }
         }
     }
 }

@@ -58,6 +58,7 @@ fun HomeScreen(
     val isSearchActive by viewModel.isSearchActive.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(BottomTab.UYGULAMALAR) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
@@ -126,7 +127,7 @@ fun HomeScreen(
                                         .forEach { viewModel.deleteApp(it) }
                                     selectedIds = emptySet()
                                 },
-                                onEdit = { /* TODO: bir sonraki adımda AddAppDialog edit modu bağlanacak */ }
+                                onEdit = { showEditDialog = true }
                             )
                         }
 
@@ -159,6 +160,22 @@ fun HomeScreen(
                 viewModel.addApp(name, category, iconPath)
             }
         )
+    }
+
+    if (showEditDialog) {
+        val editingApp = allAppsFlat.find { it.id in selectedIds }
+        if (editingApp != null) {
+            AddAppDialog(
+                onDismiss = { showEditDialog = false },
+                onSave = { name, category, iconPath ->
+                    viewModel.updateApp(editingApp.id, name, category, iconPath)
+                    selectedIds = emptySet()
+                },
+                existingName = editingApp.name,
+                existingCategory = editingApp.category,
+                existingIconPath = editingApp.iconPath
+            )
+        }
     }
 }
 

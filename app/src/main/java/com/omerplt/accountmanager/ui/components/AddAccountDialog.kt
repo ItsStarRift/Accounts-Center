@@ -33,12 +33,15 @@ import com.omerplt.accountmanager.util.CameraFileHelper
 @Composable
 fun AddAccountDialog(
     onDismiss: () -> Unit,
-    onSave: (name: String, iconPath: String?) -> Unit
+    onSave: (name: String, iconPath: String?) -> Unit,
+    existingName: String? = null,
+    existingIconPath: String? = null
 ) {
     val context = LocalContext.current
+    val isEditMode = existingName != null
 
-    var name by remember { mutableStateOf("") }
-    var iconPath by remember { mutableStateOf<String?>(null) }
+    var name by remember { mutableStateOf(existingName ?: "") }
+    var iconPath by remember { mutableStateOf(existingIconPath) }
     var showPickerSheet by remember { mutableStateOf(false) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -87,7 +90,7 @@ fun AddAccountDialog(
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                         }
                         Text(
-                            text = stringResource(R.string.add_account_title),
+                            text = if (isEditMode) stringResource(R.string.edit_account_title) else stringResource(R.string.add_account_title),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f).padding(start = 4.dp)
                         )
