@@ -115,7 +115,13 @@ fun HomeScreen(
                                         viewModel.onSearchActiveChange(false)
                                         onAppClick(it)
                                     },
-                                    onDeleteApp = { viewModel.deleteApp(it) }
+                                    selectedIds = selectedIds,
+                                    onToggleSelect = { id ->
+                                        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                                    },
+                                    onEnterSelection = { id ->
+                                        selectedIds = setOf(id)
+                                    }
                                 )
                             }
                         } else {
@@ -274,14 +280,22 @@ private fun SearchResultsList(
     results: List<AppWithAccountCount>,
     query: String,
     onAppClick: (Long) -> Unit,
-    onDeleteApp: (AppWithAccountCount) -> Unit
+    selectedIds: Set<Long>,
+    onToggleSelect: (Long) -> Unit,
+    onEnterSelection: (Long) -> Unit
 ) {
+    val selectionMode = selectedIds.isNotEmpty()
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(results, key = { it.id }) { app ->
             HighlightedAppRow(
                 app = app,
                 query = query,
-                onClick = { onAppClick(app.id) }
+                selectionMode = selectionMode,
+                isSelected = app.id in selectedIds,
+                onClick = {
+                    if (selectionMode) onToggleSelect(app.id) else onAppClick(app.id)
+                },
+                onLongClick = { onEnterSelection(app.id) }
             )
         }
     }
@@ -325,28 +339,38 @@ private fun AppRow(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HighlightedAppRow(
     app: AppWithAccountCount,
     query: String,
-    onClick: () -> Unit
+    selectionMode: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AppIconCircle(app)
         Spacer(Modifier.width(12.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(text = highlightMatch(app.name, query), style = MaterialTheme.typography.bodyLarge)
             Text(
                 stringResource(R.string.account_count, app.accountCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
+        }
+        if (selectionMode) {
+            Checkbox(checked = isSelected, onCheckedChange = { onClick() })
         }
     }
 }
