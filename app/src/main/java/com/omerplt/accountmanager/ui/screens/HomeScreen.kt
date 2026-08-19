@@ -15,6 +15,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -56,11 +59,14 @@ fun HomeScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(BottomTab.UYGULAMALAR) }
+    var selectedIds by remember { mutableStateOf(setOf<Long>()) }
+
+    val allAppsFlat = remember(groups) { groups.flatMap { it.second } }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().safeDrawingPadding(),
         floatingActionButton = {
-            if (selectedTab == BottomTab.UYGULAMALAR && !isSearchActive) {
+            if (selectedTab == BottomTab.UYGULAMALAR && !isSearchActive && selectedIds.isEmpty()) {
                 val rotation by animateFloatAsState(
                     targetValue = if (showAddDialog) 45f else 0f,
                     animationSpec = tween(200),
@@ -76,36 +82,51 @@ fun HomeScreen(
             }
         },
         bottomBar = {
-            FloatingBottomNav(
-                selected = selectedTab,
-                onSelect = { selectedTab = it }
-            )
+            if (selectedIds.isEmpty()) {
+                FloatingBottomNav(
+                    selected = selectedTab,
+                    onSelect = { selectedTab = it }
+                )
+            }
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             when (selectedTab) {
                 BottomTab.UYGULAMALAR -> {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        SearchBar(
-                            query = query,
-                            onQueryChange = viewModel::onSearchQueryChange,
-                            onSearch = {},
-                            active = isSearchActive,
-                            onActiveChange = viewModel::onSearchActiveChange,
-                            placeholder = { Text(stringResource(R.string.search_placeholder)) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            SearchResultsList(
-                                results = searchResults,
+                        if (selectedIds.isEmpty()) {
+                            SearchBar(
                                 query = query,
-                                onAppClick = {
-                                    viewModel.onSearchActiveChange(false)
-                                    onAppClick(it)
+                                onQueryChange = viewModel::onSearchQueryChange,
+                                onSearch = {},
+                                active = isSearchActive,
+                                onActiveChange = viewModel::onSearchActiveChange,
+                                placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                            ) {
+                                SearchResultsList(
+                                    results = searchResults,
+                                    query = query,
+                                    onAppClick = {
+                                        viewModel.onSearchActiveChange(false)
+                                        onAppClick(it)
+                                    },
+                                    onDeleteApp = { viewModel.deleteApp(it) }
+                                )
+                            }
+                        } else {
+                            SelectionBar(
+                                count = selectedIds.size,
+                                onClose = { selectedIds = emptySet() },
+                                onDelete = {
+                                    allAppsFlat.filter { it.id in selectedIds }
+                                        .forEach { viewModel.deleteApp(it) }
+                                    selectedIds = emptySet()
                                 },
-                                onDeleteApp = { viewModel.deleteApp(it) }
+                                onEdit = { /* TODO: bir sonraki adımda AddAppDialog edit modu bağlanacak */ }
                             )
                         }
 
@@ -113,7 +134,13 @@ fun HomeScreen(
                             AppGroupedList(
                                 groups = groups,
                                 onAppClick = onAppClick,
-                                onDeleteApp = { viewModel.deleteApp(it) }
+                                selectedIds = selectedIds,
+                                onToggleSelect = { id ->
+                                    selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                                },
+                                onEnterSelection = { id ->
+                                    selectedIds = setOf(id)
+                                }
                             )
                         }
                     }
@@ -135,12 +162,51 @@ fun HomeScreen(
     }
 }
 
+@Composable
+private fun SelectionBar(
+    count: Int,
+    onClose: () -> Unit,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_confirm))
+        }
+        if (count == 1) {
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.width(8.dp))
+        IconButton(onClick = onClose) {
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AppGroupedList(
     groups: List<Pair<Char, List<AppWithAccountCount>>>,
     onAppClick: (Long) -> Unit,
-    onDeleteApp: (AppWithAccountCount) -> Unit
+    selectedIds: Set<Long>,
+    onToggleSelect: (Long) -> Unit,
+    onEnterSelection: (Long) -> Unit
 ) {
     if (groups.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -152,6 +218,8 @@ private fun AppGroupedList(
         }
         return
     }
+
+    val selectionMode = selectedIds.isNotEmpty()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -169,8 +237,12 @@ private fun AppGroupedList(
             items(apps, key = { it.id }) { app ->
                 AppRow(
                     app = app,
-                    onClick = { onAppClick(app.id) },
-                    onDelete = { onDeleteApp(app) },
+                    selectionMode = selectionMode,
+                    isSelected = app.id in selectedIds,
+                    onClick = {
+                        if (selectionMode) onToggleSelect(app.id) else onAppClick(app.id)
+                    },
+                    onLongClick = { onEnterSelection(app.id) },
                     modifier = Modifier
                 )
                 Spacer(Modifier.height(8.dp))
@@ -193,8 +265,7 @@ private fun SearchResultsList(
             HighlightedAppRow(
                 app = app,
                 query = query,
-                onClick = { onAppClick(app.id) },
-                onDelete = { onDeleteApp(app) }
+                onClick = { onAppClick(app.id) }
             )
         }
     }
@@ -204,12 +275,12 @@ private fun SearchResultsList(
 @Composable
 private fun AppRow(
     app: AppWithAccountCount,
+    selectionMode: Boolean,
+    isSelected: Boolean,
     onClick: () -> Unit,
-    onDelete: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -217,14 +288,14 @@ private fun AppRow(
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = { showDeleteConfirm = true }
+                onLongClick = onLongClick
             )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AppIconCircle(app)
         Spacer(Modifier.width(12.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(app.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
             Text(
                 stringResource(R.string.account_count, app.accountCount),
@@ -232,43 +303,22 @@ private fun AppRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.delete_item_title, app.name)) },
-            text = { Text(stringResource(R.string.delete_app_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete()
-                    showDeleteConfirm = false
-                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
+        if (selectionMode) {
+            Checkbox(checked = isSelected, onCheckedChange = { onClick() })
+        }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HighlightedAppRow(
     app: AppWithAccountCount,
     query: String,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = { showDeleteConfirm = true }
-            )
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -282,23 +332,6 @@ private fun HighlightedAppRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.delete_item_title, app.name)) },
-            text = { Text(stringResource(R.string.delete_app_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete()
-                    showDeleteConfirm = false
-                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
     }
 }
 
@@ -329,7 +362,7 @@ private fun AppIconCircle(app: AppWithAccountCount) {
                 model = app.iconPath,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize().clip(CircleShape),
-                contentScale = ContentScale.Crop // <-- Burası eklendi
+                contentScale = ContentScale.Crop
             )
         } else {
             Text(
