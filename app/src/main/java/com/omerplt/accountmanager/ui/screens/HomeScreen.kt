@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,6 +55,7 @@ fun HomeScreen(
     settingsContent: @Composable () -> Unit
 ) {
     val groups by viewModel.alphabeticalGroups.collectAsState()
+    val favoriteApps by viewModel.favoriteApps.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val query by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
@@ -62,7 +65,10 @@ fun HomeScreen(
     var selectedTab by remember { mutableStateOf(BottomTab.UYGULAMALAR) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
-    val allAppsFlat = remember(groups) { groups.flatMap { it.second } }
+    val allAppsFlat = remember(groups, favoriteApps) { favoriteApps + groups.flatMap { it.second } }
+    val selectedAppsAllFavorite = remember(selectedIds, allAppsFlat) {
+        selectedIds.isNotEmpty() && allAppsFlat.filter { it.id in selectedIds }.all { it.isFavorite }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().safeDrawingPadding(),
@@ -128,6 +134,7 @@ fun HomeScreen(
                             if (!isSearchActive) {
                                 AppGroupedList(
                                     groups = groups,
+                                    favoriteApps = favoriteApps,
                                     onAppClick = onAppClick,
                                     selectedIds = selectedIds,
                                     onToggleSelect = { id ->
@@ -141,13 +148,18 @@ fun HomeScreen(
                         } else {
                             SelectionBar(
                                 count = selectedIds.size,
+                                allFavorite = selectedAppsAllFavorite,
                                 onClose = { selectedIds = emptySet() },
                                 onDelete = {
                                     allAppsFlat.filter { it.id in selectedIds }
                                         .forEach { viewModel.deleteApp(it) }
                                     selectedIds = emptySet()
                                 },
-                                onEdit = { showEditDialog = true }
+                                onEdit = { showEditDialog = true },
+                                onToggleFavorite = {
+                                    viewModel.toggleFavorite(selectedIds, makeFavorite = !selectedAppsAllFavorite)
+                                    selectedIds = emptySet()
+                                }
                             )
 
                             if (isSearchActive) {
@@ -166,6 +178,7 @@ fun HomeScreen(
                             } else {
                                 AppGroupedList(
                                     groups = groups,
+                                    favoriteApps = favoriteApps,
                                     onAppClick = onAppClick,
                                     selectedIds = selectedIds,
                                     onToggleSelect = { id ->
@@ -215,9 +228,11 @@ fun HomeScreen(
 @Composable
 private fun SelectionBar(
     count: Int,
+    allFavorite: Boolean,
     onClose: () -> Unit,
     onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onToggleFavorite: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -237,6 +252,12 @@ private fun SelectionBar(
             fontWeight = FontWeight.Bold
         )
         Spacer(Modifier.weight(1f))
+        IconButton(onClick = onToggleFavorite) {
+            Icon(
+                if (allFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
+                contentDescription = stringResource(R.string.favorite)
+            )
+        }
         if (count == 1) {
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
@@ -252,12 +273,13 @@ private fun SelectionBar(
 @Composable
 private fun AppGroupedList(
     groups: List<Pair<Char, List<AppWithAccountCount>>>,
+    favoriteApps: List<AppWithAccountCount>,
     onAppClick: (Long) -> Unit,
     selectedIds: Set<Long>,
     onToggleSelect: (Long) -> Unit,
     onEnterSelection: (Long) -> Unit
 ) {
-    if (groups.isEmpty()) {
+    if (groups.isEmpty() && favoriteApps.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 stringResource(R.string.home_empty),
@@ -274,6 +296,29 @@ private fun AppGroupedList(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
     ) {
+        if (favoriteApps.isNotEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.favorites_header),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp)
+                )
+            }
+            items(favoriteApps, key = { "fav_${it.id}" }) { app ->
+                AppRow(
+                    app = app,
+                    selectionMode = selectionMode,
+                    isSelected = app.id in selectedIds,
+                    onClick = {
+                        if (selectionMode) onToggleSelect(app.id) else onAppClick(app.id)
+                    },
+                    onLongClick = { onEnterSelection(app.id) },
+                    modifier = Modifier
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+        }
         groups.forEach { (letter, apps) ->
             item {
                 Text(

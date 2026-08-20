@@ -28,9 +28,15 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
 
     val alphabeticalGroups: StateFlow<List<Pair<Char, List<AppWithAccountCount>>>> =
         allApps.map { apps ->
-            apps.groupBy { it.name.first().uppercaseChar() }
+            apps.filter { !it.isFavorite }
+                .groupBy { it.name.first().uppercaseChar() }
                 .toSortedMap()
                 .map { (letter, items) -> letter to items }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val favoriteApps: StateFlow<List<AppWithAccountCount>> =
+        allApps.map { apps ->
+            apps.filter { it.isFavorite }.sortedBy { it.name.lowercase() }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val searchResults: StateFlow<List<AppWithAccountCount>> =
@@ -57,6 +63,12 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
     fun updateApp(id: Long, name: String, category: AppCategory, iconPath: String?) {
         viewModelScope.launch {
             repository.updateApp(AppItem(id = id, name = name, category = category, iconPath = iconPath))
+        }
+    }
+
+    fun toggleFavorite(appIds: Set<Long>, makeFavorite: Boolean) {
+        viewModelScope.launch {
+            appIds.forEach { id -> repository.setFavorite(id, makeFavorite) }
         }
     }
 

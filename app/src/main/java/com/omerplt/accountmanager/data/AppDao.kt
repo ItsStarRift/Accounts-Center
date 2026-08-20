@@ -12,7 +12,8 @@ data class AppWithAccountCount(
     val name: String,
     val category: AppCategory,
     val iconPath: String?,
-    val accountCount: Int
+    val accountCount: Int,
+    val isFavorite: Boolean
 )
 
 @Dao
@@ -48,4 +49,7 @@ interface AppDao {
 
     @Query("DELETE FROM apps")
     suspend fun clearApps()
+
+    @Query("UPDATE apps SET isFavorite = :isFavorite WHERE id = :appId")
+    suspend fun setFavorite(appId: Long, isFavorite: Boolean)
 }

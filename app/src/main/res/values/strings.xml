@@ -95,4 +95,6 @@
     <string name="edit">Düzenle</string>
     <string name="edit_app_title">Uygulama Düzenle</string>
     <string name="edit_account_title">Hesap Düzenle</string>
+    <string name="favorites_header">Favoriler</string>
+    <string name="favorite">Favori</string>
 </resources>

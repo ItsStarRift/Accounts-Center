@@ -20,6 +20,7 @@ class AppRepository(private val database: AppDatabase) {
 
     suspend fun deleteApp(app: AppItem) = database.appDao().deleteApp(app)
     suspend fun updateApp(app: AppItem) = database.appDao().updateApp(app)
+    suspend fun setFavorite(appId: Long, isFavorite: Boolean) = database.appDao().setFavorite(appId, isFavorite)
 
     fun getAccountsForApp(appId: Long): Flow<List<AccountItem>> =
         database.accountDao().getAccountsForApp(appId)
