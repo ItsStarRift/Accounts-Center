@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.omerplt.accountmanager"
+    namespace = "com.omerplt.starlock"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.omerplt.accountmanager"
+        applicationId = "com.omerplt.starlock"
         minSdk = 26
         targetSdk = 34
         versionCode = 2
