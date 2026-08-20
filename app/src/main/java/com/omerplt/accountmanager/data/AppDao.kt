@@ -22,7 +22,8 @@ interface AppDao {
     @Query(
         """
         SELECT apps.id AS id, apps.name AS name, apps.category AS category, apps.iconPath AS iconPath,
-               (SELECT COUNT(*) FROM accounts WHERE accounts.appId = apps.id) AS accountCount
+               (SELECT COUNT(*) FROM accounts WHERE accounts.appId = apps.id) AS accountCount,
+                apps.isFavorite AS isFavorite
         FROM apps
         ORDER BY apps.name COLLATE NOCASE ASC
         """
