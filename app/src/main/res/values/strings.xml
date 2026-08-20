@@ -97,4 +97,7 @@
     <string name="edit_account_title">Hesap Düzenle</string>
     <string name="favorites_header">Favoriler</string>
     <string name="favorite">Favori</string>
+    <string name="filter_all">Tümü</string>
+    <string name="filter_apps">Uygulamalar</string>
+    <string name="filter_games">Oyunlar</string>
 </resources>

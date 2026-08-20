@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+enum class CategoryFilter { ALL, APPS, GAMES }
+
 class HomeViewModel(private val repository: AppRepository) : ViewModel() {
 
     private val allApps: StateFlow<List<AppWithAccountCount>> =
@@ -26,8 +28,24 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
     private val _isSearchActive = MutableStateFlow(false)
     val isSearchActive: StateFlow<Boolean> = _isSearchActive
 
+    private val _categoryFilter = MutableStateFlow(CategoryFilter.ALL)
+    val categoryFilter: StateFlow<CategoryFilter> = _categoryFilter
+
+    fun onCategoryFilterChange(filter: CategoryFilter) {
+        _categoryFilter.value = filter
+    }
+
+    private val filteredApps: StateFlow<List<AppWithAccountCount>> =
+        allApps.combine(_categoryFilter) { apps, filter ->
+            when (filter) {
+                CategoryFilter.ALL -> apps
+                CategoryFilter.APPS -> apps.filter { it.category == AppCategory.UYGULAMA }
+                CategoryFilter.GAMES -> apps.filter { it.category == AppCategory.OYUN }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val alphabeticalGroups: StateFlow<List<Pair<Char, List<AppWithAccountCount>>>> =
-        allApps.map { apps ->
+        filteredApps.map { apps ->
             apps.filter { !it.isFavorite }
                 .groupBy { it.name.first().uppercaseChar() }
                 .toSortedMap()
@@ -35,7 +53,7 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val favoriteApps: StateFlow<List<AppWithAccountCount>> =
-        allApps.map { apps ->
+        filteredApps.map { apps ->
             apps.filter { it.isFavorite }.sortedBy { it.name.lowercase() }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -62,7 +80,16 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
 
     fun updateApp(id: Long, name: String, category: AppCategory, iconPath: String?) {
         viewModelScope.launch {
-            repository.updateApp(AppItem(id = id, name = name, category = category, iconPath = iconPath))
+            val existing = allApps.value.find { it.id == id }
+            repository.updateApp(
+                AppItem(
+                    id = id,
+                    name = name,
+                    category = category,
+                    iconPath = iconPath,
+                    isFavorite = existing?.isFavorite ?: false
+                )
+            )
         }
     }
 
@@ -75,11 +102,12 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
     fun deleteApp(app: AppWithAccountCount) {
         viewModelScope.launch {
             repository.deleteApp(
-                com.omerplt.accountmanager.data.AppItem(
+                AppItem(
                     id = app.id,
                     name = app.name,
                     category = app.category,
-                    iconPath = app.iconPath
+                    iconPath = app.iconPath,
+                    isFavorite = app.isFavorite
                 )
             )
         }

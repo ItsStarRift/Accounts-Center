@@ -97,4 +97,7 @@
     <string name="edit_account_title">Edit Account</string>
     <string name="favorites_header">Favorites</string>
     <string name="favorite">Favorite</string>
+    <string name="filter_all">All</string>
+    <string name="filter_apps">Apps</string>
+    <string name="filter_games">Games</string>
 </resources>

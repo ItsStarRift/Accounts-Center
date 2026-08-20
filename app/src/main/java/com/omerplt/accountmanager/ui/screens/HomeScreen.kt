@@ -56,6 +56,7 @@ fun HomeScreen(
 ) {
     val groups by viewModel.alphabeticalGroups.collectAsState()
     val favoriteApps by viewModel.favoriteApps.collectAsState()
+    val categoryFilter by viewModel.categoryFilter.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val query by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
@@ -132,6 +133,10 @@ fun HomeScreen(
                             }
 
                             if (!isSearchActive) {
+                                CategoryFilterRow(
+                                    selected = categoryFilter,
+                                    onSelect = viewModel::onCategoryFilterChange
+                                )
                                 AppGroupedList(
                                     groups = groups,
                                     favoriteApps = favoriteApps,
@@ -221,6 +226,41 @@ fun HomeScreen(
                 existingCategory = editingApp.category,
                 existingIconPath = editingApp.iconPath
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryFilterRow(
+    selected: CategoryFilter,
+    onSelect: (CategoryFilter) -> Unit
+) {
+    SingleChoiceSegmentedButtonRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        SegmentedButton(
+            selected = selected == CategoryFilter.ALL,
+            onClick = { onSelect(CategoryFilter.ALL) },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+        ) {
+            Text(stringResource(R.string.filter_all))
+        }
+        SegmentedButton(
+            selected = selected == CategoryFilter.APPS,
+            onClick = { onSelect(CategoryFilter.APPS) },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+        ) {
+            Text(stringResource(R.string.filter_apps))
+        }
+        SegmentedButton(
+            selected = selected == CategoryFilter.GAMES,
+            onClick = { onSelect(CategoryFilter.GAMES) },
+            shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+        ) {
+            Text(stringResource(R.string.filter_games))
         }
     }
 }
