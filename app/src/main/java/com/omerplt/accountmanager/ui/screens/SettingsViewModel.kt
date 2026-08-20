@@ -26,7 +26,7 @@ class SettingsViewModel(private val repository: AppRepository) : ViewModel() {
         try {
             val json = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                 ?: return@withContext false
-            repository.importAllDataFromJson(json)
+            repository.importAllDataFromJson(context, json)
             true
         } catch (e: Exception) {
             false

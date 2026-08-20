@@ -3,6 +3,9 @@ package com.omerplt.accountmanager.data
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.util.UUID
+import android.util.Base64
 
 class AppRepository(private val database: AppDatabase) {
 
@@ -20,7 +23,8 @@ class AppRepository(private val database: AppDatabase) {
 
     suspend fun deleteApp(app: AppItem) = database.appDao().deleteApp(app)
     suspend fun updateApp(app: AppItem) = database.appDao().updateApp(app)
-    suspend fun setFavorite(appId: Long, isFavorite: Boolean) = database.appDao().setFavorite(appId, isFavorite)
+    suspend fun setFavorite(appId: Long, isFavorite: Boolean) = database.appDao()
+        .setFavorite(appId, isFavorite)
 
     fun getAccountsForApp(appId: Long): Flow<List<AccountItem>> =
         database.accountDao().getAccountsForApp(appId)
@@ -33,7 +37,8 @@ class AppRepository(private val database: AppDatabase) {
 
     suspend fun deleteAccount(account: AccountItem) = database.accountDao().deleteAccount(account)
     suspend fun updateAccount(account: AccountItem) = database.accountDao().updateAccount(account)
-    suspend fun setAccountFavorite(accountId: Long, isFavorite: Boolean) = database.accountDao().setFavorite(accountId, isFavorite)
+    suspend fun setAccountFavorite(accountId: Long, isFavorite: Boolean) = database
+        .accountDao().setAccountFavorite(accountId, isFavorite)
 
     fun getFieldsForAccount(accountId: Long): Flow<List<AccountField>> =
         database.accountFieldDao().getFieldsForAccount(accountId)
@@ -52,6 +57,31 @@ class AppRepository(private val database: AppDatabase) {
 
     suspend fun deleteField(field: AccountField) = database.accountFieldDao().deleteField(field)
 
+    /** Verilen dosya yolundaki görseli Base64 string'e çevirir, yoksa null döner. */
+    private fun iconPathToBase64(path: String?): String? {
+        if (path == null) return null
+        val file = File(path)
+        if (!file.exists()) return null
+        return try {
+            Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Base64 string'i dahili depolamaya yeni bir dosya olarak yazar, yeni path'i döner. */
+    private fun base64ToIconPath(context: android.content.Context, base64: String?): String? {
+        if (base64.isNullOrBlank()) return null
+        return try {
+            val iconsDir = File(context.filesDir, "icons").apply { mkdirs() }
+            val destFile = File(iconsDir, "${UUID.randomUUID()}.png")
+            destFile.writeBytes(Base64.decode(base64, Base64.NO_WRAP))
+            destFile.absolutePath
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     suspend fun exportAllDataAsJson(): String {
         val root = JSONObject()
 
@@ -63,6 +93,7 @@ class AppRepository(private val database: AppDatabase) {
                     put("name", app.name)
                     put("category", app.category.name)
                     put("iconPath", app.iconPath ?: JSONObject.NULL)
+                    put("iconData", iconPathToBase64(app.iconPath) ?: JSONObject.NULL)
                 }
             )
         }
@@ -75,6 +106,7 @@ class AppRepository(private val database: AppDatabase) {
                     put("appId", account.appId)
                     put("name", account.name)
                     put("iconPath", account.iconPath ?: JSONObject.NULL)
+                    put("iconData", iconPathToBase64(account.iconPath) ?: JSONObject.NULL)
                 }
             )
         }
@@ -99,19 +131,20 @@ class AppRepository(private val database: AppDatabase) {
         return root.toString(2)
     }
 
-    suspend fun importAllDataFromJson(json: String) {
+    suspend fun importAllDataFromJson(context: android.content.Context, json: String) {
         val root = JSONObject(json)
 
         val apps = mutableListOf<AppItem>()
         val appsArray = root.optJSONArray("apps") ?: JSONArray()
         for (i in 0 until appsArray.length()) {
             val obj = appsArray.getJSONObject(i)
+            val iconData = if (obj.isNull("iconData")) null else obj.getString("iconData")
             apps.add(
                 AppItem(
                     id = obj.getLong("id"),
                     name = obj.getString("name"),
                     category = AppCategory.valueOf(obj.getString("category")),
-                    iconPath = if (obj.isNull("iconPath")) null else obj.getString("iconPath")
+                    iconPath = base64ToIconPath(context, iconData)
                 )
             )
         }
@@ -120,12 +153,13 @@ class AppRepository(private val database: AppDatabase) {
         val accountsArray = root.optJSONArray("accounts") ?: JSONArray()
         for (i in 0 until accountsArray.length()) {
             val obj = accountsArray.getJSONObject(i)
+            val iconData = if (obj.isNull("iconData")) null else obj.getString("iconData")
             accounts.add(
                 AccountItem(
                     id = obj.getLong("id"),
                     appId = obj.getLong("appId"),
                     name = obj.getString("name"),
-                    iconPath = if (obj.isNull("iconPath")) null else obj.getString("iconPath")
+                    iconPath = base64ToIconPath(context, iconData)
                 )
             )
         }
