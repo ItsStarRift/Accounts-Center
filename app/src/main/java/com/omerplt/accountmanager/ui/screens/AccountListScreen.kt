@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import com.omerplt.accountmanager.R
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.omerplt.accountmanager.data.AccountItem
@@ -144,9 +145,12 @@ fun AccountListScreen(
                 SelectableAccountList(
                     favoriteAccounts = emptyList(),
                     accounts = searchResults,
-                    emptyMessage = null,
+                    query = query,
                     selectedIds = selectedIds,
-                    onAccountClick = { },
+                    onAccountClick = { id ->
+                        viewModel.onSearchActiveChange(false)
+                        onAccountClick(id)
+                    },
                     onToggleSelect = { id ->
                         selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
                     },
@@ -172,7 +176,7 @@ fun AccountListScreen(
                         SelectableAccountList(
                             favoriteAccounts = favoriteAccounts,
                             accounts = nonFavoriteAccounts,
-                            emptyMessage = null,
+                            query = "",
                             selectedIds = selectedIds,
                             onAccountClick = onAccountClick,
                             onToggleSelect = { id ->
@@ -218,7 +222,7 @@ fun AccountListScreen(
 private fun SelectableAccountList(
     favoriteAccounts: List<AccountItem>,
     accounts: List<AccountItem>,
-    emptyMessage: String?,
+    query: String,
     selectedIds: Set<Long>,
     onAccountClick: (Long) -> Unit,
     onToggleSelect: (Long) -> Unit,
@@ -241,6 +245,7 @@ private fun SelectableAccountList(
             items(favoriteAccounts, key = { "fav_${it.id}" }) { account ->
                 AccountRow(
                     account = account,
+                    query = query,
                     selectionMode = selectionMode,
                     isSelected = account.id in selectedIds,
                     onClick = {
@@ -254,6 +259,7 @@ private fun SelectableAccountList(
         items(accounts, key = { it.id }) { account ->
             AccountRow(
                 account = account,
+                query = query,
                 selectionMode = selectionMode,
                 isSelected = account.id in selectedIds,
                 onClick = {
@@ -338,6 +344,7 @@ private fun SelectionTopBar(
 @Composable
 fun AccountRow(
     account: AccountItem,
+    query: String = "",
     selectionMode: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -380,7 +387,7 @@ fun AccountRow(
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = account.name,
+            text = highlightAccountMatch(account.name, query),
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
@@ -388,5 +395,18 @@ fun AccountRow(
         if (selectionMode) {
             Checkbox(checked = isSelected, onCheckedChange = { onClick() })
         }
+    }
+}
+
+private fun highlightAccountMatch(text: String, query: String): androidx.compose.ui.text.AnnotatedString {
+    if (query.isBlank()) return androidx.compose.ui.text.AnnotatedString(text)
+    val index = text.indexOf(query, ignoreCase = true)
+    if (index < 0) return androidx.compose.ui.text.AnnotatedString(text)
+    return androidx.compose.ui.text.buildAnnotatedString {
+        append(text.substring(0, index))
+        withStyle(androidx.compose.ui.text.SpanStyle(color = com.omerplt.accountmanager.ui.theme.AccentOrange, fontWeight = FontWeight.Bold)) {
+            append(text.substring(index, index + query.length))
+        }
+        append(text.substring(index + query.length))
     }
 }
