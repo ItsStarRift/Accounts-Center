@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.omerplt.starlock"
+    namespace = "com.starrift.starlock"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.omerplt.starlock"
+        applicationId = "com.starrift.starlock"
         minSdk = 26
         targetSdk = 34
         versionCode = 2
