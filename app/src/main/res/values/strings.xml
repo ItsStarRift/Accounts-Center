@@ -100,4 +100,6 @@
     <string name="filter_all">Tümü</string>
     <string name="filter_apps">Uygulamalar</string>
     <string name="filter_games">Oyunlar</string>
+    <string name="category_label_app">Uygulama</string>
+    <string name="category_label_game">Oyun</string>
 </resources>

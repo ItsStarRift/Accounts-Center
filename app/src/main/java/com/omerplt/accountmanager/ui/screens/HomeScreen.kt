@@ -440,7 +440,7 @@ private fun AppRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(app.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
             Text(
-                stringResource(R.string.account_count, app.accountCount),
+                text = subtitleFor(app),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -449,6 +449,16 @@ private fun AppRow(
             Checkbox(checked = isSelected, onCheckedChange = { onClick() })
         }
     }
+}
+
+@Composable
+private fun subtitleFor(app: AppWithAccountCount): String {
+    val categoryLabel = if (app.category == AppCategory.OYUN) {
+        stringResource(R.string.category_label_game)
+    } else {
+        stringResource(R.string.category_label_app)
+    }
+    return stringResource(R.string.account_count, app.accountCount) + "  •  " + categoryLabel
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -476,7 +486,7 @@ private fun HighlightedAppRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = highlightMatch(app.name, query), style = MaterialTheme.typography.bodyLarge)
             Text(
-                stringResource(R.string.account_count, app.accountCount),
+                text = subtitleFor(app),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -502,10 +512,11 @@ private fun highlightMatch(text: String, query: String): AnnotatedString {
 
 @Composable
 private fun AppIconCircle(app: AppWithAccountCount) {
+    val iconShape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
             .size(44.dp)
-            .clip(CircleShape)
+            .clip(iconShape)
             .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
@@ -513,7 +524,7 @@ private fun AppIconCircle(app: AppWithAccountCount) {
             AsyncImage(
                 model = app.iconPath,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                modifier = Modifier.fillMaxSize().clip(iconShape),
                 contentScale = ContentScale.Crop
             )
         } else {
