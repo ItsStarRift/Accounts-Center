@@ -78,7 +78,7 @@ fun AccountListScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(32.dp)
-                                        .clip(CircleShape)
+                                        .clip(RoundedCornerShape(9.dp))
                                         .background(MaterialTheme.colorScheme.primary),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -87,7 +87,7 @@ fun AccountListScreen(
                                             model = app?.iconPath,
                                             contentDescription = null,
                                             contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize().clip(CircleShape)
+                                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(9.dp))
                                         )
                                     } else {
                                         Text(
@@ -285,7 +285,7 @@ private fun SearchTopBar(
             OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                placeholder = { Text(stringResource(R.string.account_search_placeholder)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )

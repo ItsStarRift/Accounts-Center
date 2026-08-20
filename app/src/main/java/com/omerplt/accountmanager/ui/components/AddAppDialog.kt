@@ -138,7 +138,7 @@ fun AddAppDialog(
                             Box(
                                 modifier = Modifier
                                     .size(96.dp)
-                                    .clip(CircleShape)
+                                    .clip(RoundedCornerShape(20.dp))
                                     .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -146,7 +146,7 @@ fun AddAppDialog(
                                     AsyncImage(
                                         model = iconPath,
                                         contentDescription = stringResource(R.string.cd_selected_icon),
-                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
@@ -161,7 +161,7 @@ fun AddAppDialog(
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
-                                    .clip(CircleShape)
+                                    .clip(RoundedCornerShape(20.dp))
                                     .background(MaterialTheme.colorScheme.secondaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {

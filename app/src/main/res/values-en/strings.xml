@@ -102,4 +102,5 @@
     <string name="filter_games">Games</string>
     <string name="category_label_app">App</string>
     <string name="category_label_game">Game</string>
+    <string name="account_search_placeholder">Search for an account...</string>
 </resources>
