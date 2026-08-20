@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Hesap Yöneticisi</string>
+    <string name="app_name">StarLock</string>
     <string name="settings_title">Ayarlar</string>
     <string name="app_lock">Uygulama Kilidi</string>
     <string name="on">Açık</string>

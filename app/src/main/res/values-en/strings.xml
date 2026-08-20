@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Account Manager</string>
+    <string name="app_name">StarLock</string>
     <string name="settings_title">Settings</string>
     <string name="app_lock">App Lock</string>
     <string name="on">On</string>

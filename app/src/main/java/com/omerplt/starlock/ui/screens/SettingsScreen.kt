@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import com.omerplt.starlock.R
 import com.omerplt.starlock.util.PinManager
 
-private const val GITHUB_URL = "https://github.com/ItsStarRift/Accounts-Center"
+private const val GITHUB_URL = "https://github.com/ItsStarRift/StarLock"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
 private const val APP_VERSION = "1.0.0"
 
@@ -141,7 +141,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 onClick = {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:$FEEDBACK_EMAIL")
-                        putExtra(Intent.EXTRA_SUBJECT, "Account Manager Feedback")
+                        putExtra(Intent.EXTRA_SUBJECT, "StarLock Feedback")
                     }
                     context.startActivity(Intent.createChooser(intent, "Send Feedback"))
                 }
