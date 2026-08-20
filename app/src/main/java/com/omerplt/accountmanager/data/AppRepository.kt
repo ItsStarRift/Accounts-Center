@@ -33,6 +33,7 @@ class AppRepository(private val database: AppDatabase) {
 
     suspend fun deleteAccount(account: AccountItem) = database.accountDao().deleteAccount(account)
     suspend fun updateAccount(account: AccountItem) = database.accountDao().updateAccount(account)
+    suspend fun setAccountFavorite(accountId: Long, isFavorite: Boolean) = database.accountDao().setFavorite(accountId, isFavorite)
 
     fun getFieldsForAccount(accountId: Long): Flow<List<AccountField>> =
         database.accountFieldDao().getFieldsForAccount(accountId)

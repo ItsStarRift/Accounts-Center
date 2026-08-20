@@ -21,6 +21,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,64 +47,92 @@ fun AccountListScreen(
 ) {
     val app by viewModel.app.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
+    val favoriteAccounts by viewModel.favoriteAccounts.collectAsState()
+    val nonFavoriteAccounts by viewModel.nonFavoriteAccounts.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
+    val query by viewModel.searchQuery.collectAsState()
+    val isSearchActive by viewModel.isSearchActive.collectAsState()
+
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
+    val selectedAllFavorite = remember(selectedIds, accounts) {
+        selectedIds.isNotEmpty() && accounts.filter { it.id in selectedIds }.all { it.isFavorite }
+    }
+
     Scaffold(
         topBar = {
             if (selectedIds.isEmpty()) {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (app?.iconPath != null) {
-                                    AsyncImage(
-                                        model = app?.iconPath,
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize().clip(CircleShape)
-                                    )
-                                } else {
-                                    Text(
-                                        text = app?.name?.take(1)?.uppercase() ?: "",
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                if (isSearchActive) {
+                    SearchTopBar(
+                        query = query,
+                        onQueryChange = viewModel::onSearchQueryChange,
+                        onClose = { viewModel.onSearchActiveChange(false) }
+                    )
+                } else {
+                    TopAppBar(
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (app?.iconPath != null) {
+                                        AsyncImage(
+                                            model = app?.iconPath,
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize().clip(CircleShape)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = app?.name?.take(1)?.uppercase() ?: "",
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(app?.name ?: "")
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(app?.name ?: "")
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { viewModel.onSearchActiveChange(true) }) {
+                                Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search_placeholder))
+                            }
                         }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
-                        }
-                    }
-                )
+                    )
+                }
             } else {
                 SelectionTopBar(
                     count = selectedIds.size,
+                    allFavorite = selectedAllFavorite,
                     onClose = { selectedIds = emptySet() },
                     onDelete = {
                         accounts.filter { it.id in selectedIds }
                             .forEach { viewModel.deleteAccount(it) }
                         selectedIds = emptySet()
                     },
-                    onEdit = { showEditDialog = true }
+                    onEdit = { showEditDialog = true },
+                    onToggleFavorite = {
+                        viewModel.toggleFavorite(selectedIds, makeFavorite = !selectedAllFavorite)
+                        selectedIds = emptySet()
+                    }
                 )
             }
         },
         floatingActionButton = {
-            if (selectedIds.isEmpty()) {
+            if (selectedIds.isEmpty() && !isSearchActive) {
                 FloatingActionButton(onClick = { showAddDialog = true }) {
                     Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_account))
                 }
@@ -109,44 +140,46 @@ fun AccountListScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            AnimatedContent(
-                targetState = accounts.isEmpty(),
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(150))
-                },
-                label = "accounts-empty-list"
-            ) { isEmpty ->
-                if (isEmpty) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            stringResource(R.string.accountlist_empty),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    val selectionMode = selectedIds.isNotEmpty()
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
-                    ) {
-                        items(accounts, key = { it.id }) { account ->
-                            AccountRow(
-                                account = account,
-                                selectionMode = selectionMode,
-                                isSelected = account.id in selectedIds,
-                                onClick = {
-                                    if (selectionMode) {
-                                        selectedIds = if (account.id in selectedIds) selectedIds - account.id else selectedIds + account.id
-                                    } else {
-                                        onAccountClick(account.id)
-                                    }
-                                },
-                                onLongClick = { selectedIds = setOf(account.id) }
+            if (isSearchActive && selectedIds.isEmpty()) {
+                SelectableAccountList(
+                    favoriteAccounts = emptyList(),
+                    accounts = searchResults,
+                    emptyMessage = null,
+                    selectedIds = selectedIds,
+                    onAccountClick = { },
+                    onToggleSelect = { id ->
+                        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                    },
+                    onEnterSelection = { id -> selectedIds = setOf(id) }
+                )
+            } else {
+                AnimatedContent(
+                    targetState = accounts.isEmpty(),
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(150))
+                    },
+                    label = "accounts-empty-list"
+                ) { isEmpty ->
+                    if (isEmpty) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                stringResource(R.string.accountlist_empty),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
-                        item { Spacer(modifier = Modifier.height(96.dp)) }
+                    } else {
+                        SelectableAccountList(
+                            favoriteAccounts = favoriteAccounts,
+                            accounts = nonFavoriteAccounts,
+                            emptyMessage = null,
+                            selectedIds = selectedIds,
+                            onAccountClick = onAccountClick,
+                            onToggleSelect = { id ->
+                                selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+                            },
+                            onEnterSelection = { id -> selectedIds = setOf(id) }
+                        )
                     }
                 }
             }
@@ -180,13 +213,94 @@ fun AccountListScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SelectableAccountList(
+    favoriteAccounts: List<AccountItem>,
+    accounts: List<AccountItem>,
+    emptyMessage: String?,
+    selectedIds: Set<Long>,
+    onAccountClick: (Long) -> Unit,
+    onToggleSelect: (Long) -> Unit,
+    onEnterSelection: (Long) -> Unit
+) {
+    val selectionMode = selectedIds.isNotEmpty()
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        if (favoriteAccounts.isNotEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.favorites_header),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+                )
+            }
+            items(favoriteAccounts, key = { "fav_${it.id}" }) { account ->
+                AccountRow(
+                    account = account,
+                    selectionMode = selectionMode,
+                    isSelected = account.id in selectedIds,
+                    onClick = {
+                        if (selectionMode) onToggleSelect(account.id) else onAccountClick(account.id)
+                    },
+                    onLongClick = { onEnterSelection(account.id) }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+        items(accounts, key = { it.id }) { account ->
+            AccountRow(
+                account = account,
+                selectionMode = selectionMode,
+                isSelected = account.id in selectedIds,
+                onClick = {
+                    if (selectionMode) onToggleSelect(account.id) else onAccountClick(account.id)
+                },
+                onLongClick = { onEnterSelection(account.id) }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        item { Spacer(modifier = Modifier.height(96.dp)) }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchTopBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClose: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SelectionTopBar(
     count: Int,
+    allFavorite: Boolean,
     onClose: () -> Unit,
     onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onToggleFavorite: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -202,6 +316,12 @@ private fun SelectionTopBar(
             }
         },
         actions = {
+            IconButton(onClick = onToggleFavorite) {
+                Icon(
+                    if (allFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
+                    contentDescription = stringResource(R.string.favorite)
+                )
+            }
             if (count == 1) {
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))

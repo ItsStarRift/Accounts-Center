@@ -26,5 +26,6 @@ data class AccountItem(
     val appId: Long,
     val name: String,
     val iconPath: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val isFavorite: Boolean = false
 )
