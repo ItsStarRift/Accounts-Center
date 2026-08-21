@@ -103,4 +103,13 @@
     <string name="category_label_app">App</string>
     <string name="category_label_game">Game</string>
     <string name="account_search_placeholder">Search for an account...</string>
+    <string name="trash">Trash</string>
+    <string name="trash_sub">View deleted items</string>
+    <string name="trash_selected_count">%1$d selected</string>
+    <string name="restore">Restore</string>
+    <string name="delete_permanently">Delete Permanently</string>
+    <string name="trash_tab_apps">Apps</string>
+    <string name="trash_tab_accounts">Accounts</string>
+    <string name="trash_tab_fields">Fields</string>
+    <string name="trash_empty">Trash is empty</string>
 </resources>

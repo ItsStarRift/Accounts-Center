@@ -25,12 +25,13 @@ interface AppDao {
                (SELECT COUNT(*) FROM accounts WHERE accounts.appId = apps.id) AS accountCount,
                 apps.isFavorite AS isFavorite
         FROM apps
+        WHERE apps.isDeleted = 0
         ORDER BY apps.name COLLATE NOCASE ASC
         """
     )
     fun getAllAppsWithCount(): Flow<List<AppWithAccountCount>>
 
-    @Query("SELECT * FROM apps WHERE id = :appId")
+    @Query("SELECT * FROM apps WHERE id = :appId AND isDeleted = 0")
     fun getAppById(appId: Long): Flow<AppItem?>
 
     @Insert
@@ -50,6 +51,18 @@ interface AppDao {
 
     @Query("DELETE FROM apps")
     suspend fun clearApps()
+
+    @Query("SELECT * FROM apps WHERE isDeleted = 1 ORDER BY deletedAt DESC")
+    fun getDeletedApps(): Flow<List<AppItem>>
+
+    @Query("UPDATE apps SET isDeleted = 1, deletedAt = :deletedAt WHERE id = :appId")
+    suspend fun softDeleteApp(appId: Long, deletedAt: Long)
+
+    @Query("UPDATE apps SET isDeleted = 0, deletedAt = NULL WHERE id = :appId")
+    suspend fun restoreApp(appId: Long)
+
+    @Query("DELETE FROM apps WHERE id = :appId")
+    suspend fun permanentlyDeleteApp(appId: Long)
 
     @Query("UPDATE apps SET isFavorite = :isFavorite WHERE id = :appId")
     suspend fun setFavorite(appId: Long, isFavorite: Boolean)

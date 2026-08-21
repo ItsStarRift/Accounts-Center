@@ -40,6 +40,9 @@ import com.starrift.starlock.ui.screens.HomeViewModelFactory
 import com.starrift.starlock.ui.screens.SettingsScreen
 import com.starrift.starlock.ui.screens.SettingsViewModel
 import com.starrift.starlock.ui.screens.SettingsViewModelFactory
+import com.starrift.starlock.ui.screens.TrashScreen
+import com.starrift.starlock.ui.screens.TrashViewModel
+import com.starrift.starlock.ui.screens.TrashViewModelFactory
 import com.starrift.starlock.ui.theme.HesapYoneticisiTheme
 import com.starrift.starlock.util.PinManager
 import com.starrift.starlock.ui.screens.LockScreen
@@ -116,7 +119,7 @@ private fun AppRoot(repository: AppRepository) {
             HomeScreen(
                 viewModel = homeViewModel,
                 onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
-                settingsContent = { SettingsScreen(viewModel = settingsViewModel) }
+                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }) }
             )
         }
 
@@ -163,6 +166,14 @@ private fun AppRoot(repository: AppRepository) {
             )
             AccountDetailScreen(
                 viewModel = accountDetailViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Routes.TRASH) {
+            val trashViewModel: TrashViewModel = viewModel(factory = TrashViewModelFactory(repository))
+            TrashScreen(
+                viewModel = trashViewModel,
                 onBackClick = { navController.popBackStack() }
             )
         }

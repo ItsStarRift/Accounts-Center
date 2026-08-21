@@ -83,7 +83,7 @@ class AccountListViewModel(
 
     fun deleteAccount(account: AccountItem) {
         viewModelScope.launch {
-            repository.deleteAccount(account)
+            repository.softDeleteAccount(account.id)
         }
     }
 

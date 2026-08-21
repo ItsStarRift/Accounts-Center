@@ -103,4 +103,13 @@
     <string name="category_label_app">Uygulama</string>
     <string name="category_label_game">Oyun</string>
     <string name="account_search_placeholder">Bir hesap aratın...</string>
+    <string name="trash">Çöp Kutusu</string>
+    <string name="trash_sub">Silinen öğeleri görüntüle</string>
+    <string name="trash_selected_count">%1$d seçildi</string>
+    <string name="restore">Geri Getir</string>
+    <string name="delete_permanently">Kalıcı Olarak Sil</string>
+    <string name="trash_tab_apps">Uygulamalar</string>
+    <string name="trash_tab_accounts">Hesaplar</string>
+    <string name="trash_tab_fields">Terimler</string>
+    <string name="trash_empty">Çöp kutusu boş</string>
 </resources>

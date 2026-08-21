@@ -36,7 +36,7 @@ class AccountDetailViewModel(
 
     fun deleteField(field: AccountField) {
         viewModelScope.launch {
-            repository.deleteField(field)
+            repository.softDeleteField(field.id)
         }
     }
 }

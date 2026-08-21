@@ -101,15 +101,7 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
 
     fun deleteApp(app: AppWithAccountCount) {
         viewModelScope.launch {
-            repository.deleteApp(
-                AppItem(
-                    id = app.id,
-                    name = app.name,
-                    category = app.category,
-                    iconPath = app.iconPath,
-                    isFavorite = app.isFavorite
-                )
-            )
+            repository.softDeleteApp(app.id)
         }
     }
 }

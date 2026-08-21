@@ -28,5 +28,7 @@ data class AccountField(
     val label: String,
     val value: String,
     val isCustomLabel: Boolean,
-    val orderIndex: Int
+    val orderIndex: Int,
+    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null
 )

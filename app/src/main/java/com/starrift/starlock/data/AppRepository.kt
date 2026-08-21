@@ -9,6 +9,36 @@ import android.util.Base64
 
 class AppRepository(private val database: AppDatabase) {
 
+    // --- Çöp Kutusu ---
+    fun getDeletedApps(): Flow<List<AppItem>> = database.appDao().getDeletedApps()
+    fun getDeletedAccounts(): Flow<List<AccountWithAppName>> = database.accountDao().getDeletedAccounts()
+    fun getDeletedFields(): Flow<List<AccountFieldWithAccountName>> = database.accountFieldDao().getDeletedFields()
+
+    suspend fun softDeleteApp(appId: Long) {
+        val now = System.currentTimeMillis()
+        database.accountFieldDao().softDeleteFieldsByAppId(appId, now)
+        database.accountDao().softDeleteAccountsByAppId(appId, now)
+        database.appDao().softDeleteApp(appId, now)
+    }
+
+    suspend fun softDeleteAccount(accountId: Long) {
+        val now = System.currentTimeMillis()
+        database.accountFieldDao().softDeleteFieldsByAccountId(accountId, now)
+        database.accountDao().softDeleteAccount(accountId, now)
+    }
+
+    suspend fun softDeleteField(fieldId: Long) {
+        database.accountFieldDao().softDeleteField(fieldId, System.currentTimeMillis())
+    }
+
+    suspend fun restoreApp(appId: Long) = database.appDao().restoreApp(appId)
+    suspend fun restoreAccount(accountId: Long) = database.accountDao().restoreAccount(accountId)
+    suspend fun restoreField(fieldId: Long) = database.accountFieldDao().restoreField(fieldId)
+
+    suspend fun permanentlyDeleteApp(appId: Long) = database.appDao().permanentlyDeleteApp(appId)
+    suspend fun permanentlyDeleteAccount(accountId: Long) = database.accountDao().permanentlyDeleteAccount(accountId)
+    suspend fun permanentlyDeleteField(fieldId: Long) = database.accountFieldDao().permanentlyDeleteField(fieldId)
+
     fun getAllAppsWithCount(): Flow<List<AppWithAccountCount>> =
         database.appDao().getAllAppsWithCount()
 
