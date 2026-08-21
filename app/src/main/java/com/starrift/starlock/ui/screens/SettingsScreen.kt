@@ -120,7 +120,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 icon = Icons.Default.Upload,
                 title = stringResource(R.string.export_data),
                 subtitle = stringResource(R.string.export_data_sub),
-                onClick = { exportLauncher.launch("account-manager-backup.json") }
+                onClick = { exportLauncher.launch("StarLock-Backup.json") }
             )
             SettingsDivider()
             SettingsRow(
