@@ -1,5 +1,7 @@
 package com.starrift.starlock.ui.screens
 
+import com.starrift.starlock.BuildConfig
+
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -35,7 +37,7 @@ import com.starrift.starlock.util.PinManager
 
 private const val GITHUB_URL = "https://github.com/ItsStarRift/StarLock"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
-private const val APP_VERSION = "1.0.0"
+private val APP_VERSION = BuildConfig.VERSION_NAME
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
