@@ -130,6 +130,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit) {
                 title = stringResource(R.string.import_data),
                 subtitle = stringResource(R.string.import_data_sub),
                 onClick = { importLauncher.launch(arrayOf("application/json")) }
+            )
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Delete,
