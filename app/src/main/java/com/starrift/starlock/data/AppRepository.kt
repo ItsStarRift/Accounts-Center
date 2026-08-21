@@ -31,8 +31,15 @@ class AppRepository(private val database: AppDatabase) {
         database.accountFieldDao().softDeleteField(fieldId, System.currentTimeMillis())
     }
 
-    suspend fun restoreApp(appId: Long) = database.appDao().restoreApp(appId)
-    suspend fun restoreAccount(accountId: Long) = database.accountDao().restoreAccount(accountId)
+    suspend fun restoreApp(appId: Long) {
+        database.appDao().restoreApp(appId)
+        database.accountDao().restoreAccountsByAppId(appId)
+        database.accountFieldDao().restoreFieldsByAppId(appId)
+    }
+    suspend fun restoreAccount(accountId: Long) {
+        database.accountDao().restoreAccount(accountId)
+        database.accountFieldDao().restoreFieldsByAccountId(accountId)
+    }
     suspend fun restoreField(fieldId: Long) = database.accountFieldDao().restoreField(fieldId)
 
     suspend fun permanentlyDeleteApp(appId: Long) = database.appDao().permanentlyDeleteApp(appId)

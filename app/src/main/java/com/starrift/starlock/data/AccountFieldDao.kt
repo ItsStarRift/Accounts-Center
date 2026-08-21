@@ -43,6 +43,12 @@ interface AccountFieldDao {
     @Query("UPDATE account_fields SET isDeleted = 0, deletedAt = NULL WHERE id = :fieldId")
     suspend fun restoreField(fieldId: Long)
 
+    @Query("UPDATE account_fields SET isDeleted = 0, deletedAt = NULL WHERE accountId = :accountId")
+    suspend fun restoreFieldsByAccountId(accountId: Long)
+
+    @Query("UPDATE account_fields SET isDeleted = 0, deletedAt = NULL WHERE accountId IN (SELECT id FROM accounts WHERE appId = :appId)")
+    suspend fun restoreFieldsByAppId(appId: Long)
+
     @Query("DELETE FROM account_fields WHERE id = :fieldId")
     suspend fun permanentlyDeleteField(fieldId: Long)
 

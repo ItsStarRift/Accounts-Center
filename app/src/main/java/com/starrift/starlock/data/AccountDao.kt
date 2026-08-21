@@ -57,4 +57,7 @@ interface AccountDao {
 
     @Query("UPDATE accounts SET isFavorite = :isFavorite WHERE id = :accountId")
     suspend fun setFavorite(accountId: Long, isFavorite: Boolean)
+
+    @Query("UPDATE accounts SET isDeleted = 0, deletedAt = NULL WHERE appId = :appId")
+    suspend fun restoreAccountsByAppId(appId: Long)
 }
