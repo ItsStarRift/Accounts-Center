@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.starrift.starlock.ui.screens
 
 import androidx.compose.foundation.background
