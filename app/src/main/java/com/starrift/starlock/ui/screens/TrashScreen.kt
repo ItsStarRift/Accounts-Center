@@ -45,6 +45,9 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
     val deletedAccounts by viewModel.deletedAccounts.collectAsState()
     val deletedFields by viewModel.deletedFields.collectAsState()
 
+    var confirmRestoreAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var confirmDeleteAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = {
@@ -60,10 +63,10 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
             },
             actions = {
                 if (isSelectionMode) {
-                    IconButton(onClick = { viewModel.restoreSelected() }) {
+                    IconButton(onClick = { confirmRestoreAction = { viewModel.restoreSelected() } }) {
                         Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.restore))
                     }
-                    IconButton(onClick = { viewModel.permanentlyDeleteSelected() }) {
+                    IconButton(onClick = { confirmDeleteAction = { viewModel.permanentlyDeleteSelected() } }) {
                         Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.delete_permanently))
                     }
                 }
@@ -121,8 +124,8 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                                 if (isSelectionMode) viewModel.toggleSelection(app.id)
                             },
                             onLongClick = { viewModel.enterSelectionMode(app.id) },
-                            onRestore = { viewModel.restoreSingle(app.id) },
-                            onDelete = { viewModel.permanentlyDeleteSingle(app.id) }
+                            onRestore = { confirmRestoreAction = { viewModel.restoreSingle(app.id) } },
+                            onDelete = { confirmDeleteAction = { viewModel.permanentlyDeleteSingle(app.id) } }
                         )
                     }
                     TrashTab.ACCOUNTS -> items(deletedAccounts, key = { it.id }) { account ->
@@ -135,8 +138,8 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                                 if (isSelectionMode) viewModel.toggleSelection(account.id)
                             },
                             onLongClick = { viewModel.enterSelectionMode(account.id) },
-                            onRestore = { viewModel.restoreSingle(account.id) },
-                            onDelete = { viewModel.permanentlyDeleteSingle(account.id) }
+                            onRestore = { confirmRestoreAction = { viewModel.restoreSingle(account.id) } },
+                            onDelete = { confirmDeleteAction = { viewModel.permanentlyDeleteSingle(account.id) } }
                         )
                     }
                     TrashTab.FIELDS -> items(deletedFields, key = { it.id }) { field ->
@@ -149,8 +152,8 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                                 if (isSelectionMode) viewModel.toggleSelection(field.id)
                             },
                             onLongClick = { viewModel.enterSelectionMode(field.id) },
-                            onRestore = { viewModel.restoreSingle(field.id) },
-                            onDelete = { viewModel.permanentlyDeleteSingle(field.id) }
+                            onRestore = { confirmRestoreAction = { viewModel.restoreSingle(field.id) } },
+                            onDelete = { confirmDeleteAction = { viewModel.permanentlyDeleteSingle(field.id) } }
                         )
                     }
                 }
@@ -205,4 +208,38 @@ private fun TrashRow(
         }
     }
     Spacer(modifier = Modifier.height(6.dp))
+
+    if (confirmRestoreAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmRestoreAction = null },
+            title = { Text(stringResource(R.string.restore_confirm_title)) },
+            text = { Text(stringResource(R.string.restore_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRestoreAction?.invoke()
+                    confirmRestoreAction = null
+                }) { Text(stringResource(R.string.restore)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestoreAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    if (confirmDeleteAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteAction = null },
+            title = { Text(stringResource(R.string.delete_permanently_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_permanently_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDeleteAction?.invoke()
+                    confirmDeleteAction = null
+                }) { Text(stringResource(R.string.delete_permanently)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeleteAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
 }
