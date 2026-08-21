@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +64,7 @@ fun HomeScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableStateOf(BottomTab.UYGULAMALAR) }
+    var selectedTab by rememberSaveable { mutableStateOf(BottomTab.UYGULAMALAR) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
     val allAppsFlat = remember(groups, favoriteApps) { favoriteApps + groups.flatMap { it.second } }
