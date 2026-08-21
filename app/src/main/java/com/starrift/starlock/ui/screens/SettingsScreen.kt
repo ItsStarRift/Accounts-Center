@@ -138,7 +138,6 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit) {
                 subtitle = stringResource(R.string.trash_sub),
                 onClick = onTrashClick
             )
-            )
         }
 
         Spacer(Modifier.height(20.dp))
