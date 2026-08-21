@@ -160,6 +160,40 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
             }
         }
     }
+
+    if (confirmRestoreAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmRestoreAction = null },
+            title = { Text(stringResource(R.string.restore_confirm_title)) },
+            text = { Text(stringResource(R.string.restore_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRestoreAction?.invoke()
+                    confirmRestoreAction = null
+                }) { Text(stringResource(R.string.restore)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestoreAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    if (confirmDeleteAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteAction = null },
+            title = { Text(stringResource(R.string.delete_permanently_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_permanently_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDeleteAction?.invoke()
+                    confirmDeleteAction = null
+                }) { Text(stringResource(R.string.delete_permanently)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeleteAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
 }
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -208,38 +242,4 @@ private fun TrashRow(
         }
     }
     Spacer(modifier = Modifier.height(6.dp))
-
-    if (confirmRestoreAction != null) {
-        AlertDialog(
-            onDismissRequest = { confirmRestoreAction = null },
-            title = { Text(stringResource(R.string.restore_confirm_title)) },
-            text = { Text(stringResource(R.string.restore_confirm_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmRestoreAction?.invoke()
-                    confirmRestoreAction = null
-                }) { Text(stringResource(R.string.restore)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmRestoreAction = null }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
-    }
-
-    if (confirmDeleteAction != null) {
-        AlertDialog(
-            onDismissRequest = { confirmDeleteAction = null },
-            title = { Text(stringResource(R.string.delete_permanently_confirm_title)) },
-            text = { Text(stringResource(R.string.delete_permanently_confirm_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDeleteAction?.invoke()
-                    confirmDeleteAction = null
-                }) { Text(stringResource(R.string.delete_permanently)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDeleteAction = null }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
-    }
 }
