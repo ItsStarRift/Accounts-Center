@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                     var isUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
 
                     if (isUnlocked) {
-                        AppRoot(repository)
+                        AppRoot(repository, pinManager)
                     } else {
                         LockScreen(
                             pinManager = pinManager,
@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
 private const val TRANSITION_DURATION = 320
 
 @Composable
-private fun AppRoot(repository: AppRepository) {
+private fun AppRoot(repository: AppRepository, pinManager: PinManager) {
     val navController = rememberNavController()
 
     NavHost(
