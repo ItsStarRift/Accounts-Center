@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
         // Dil ayarını yükle
         val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val savedLang = prefs.getString("app_lang", "system") ?: "system"
+        val savedTheme = prefs.getString("app_theme", "system") ?: "system"
         
         if (savedLang != "system") {
             val locale = Locale(savedLang)
@@ -72,7 +73,13 @@ class MainActivity : ComponentActivity() {
         val pinManager = PinManager(applicationContext)
 
         setContent {
-            HesapYoneticisiTheme {
+            var themeMode by remember { mutableStateOf(savedTheme) }
+            val useDarkTheme = when (themeMode) {
+                "dark" -> true
+                "light" -> false
+                else -> isSystemInDarkTheme()
+            }
+            HesapYoneticisiTheme(darkTheme = useDarkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -80,7 +87,15 @@ class MainActivity : ComponentActivity() {
                     var isUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
 
                     if (isUnlocked) {
-                        AppRoot(repository, pinManager)
+                        AppRoot(
+                    repository = repository,
+                    pinManager = pinManager,
+                    themeMode = themeMode,
+                    onThemeChange = { newMode ->
+                        themeMode = newMode
+                        prefs.edit().putString("app_theme", newMode).apply()
+                    }
+                )
                     } else {
                         LockScreen(
                             pinManager = pinManager,
@@ -96,7 +111,7 @@ class MainActivity : ComponentActivity() {
 private const val TRANSITION_DURATION = 320
 
 @Composable
-private fun AppRoot(repository: AppRepository, pinManager: PinManager) {
+private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode: String, onThemeChange: (String) -> Unit) {
     val navController = rememberNavController()
 
     NavHost(
@@ -119,7 +134,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager) {
             HomeScreen(
                 viewModel = homeViewModel,
                 onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
-                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }) }
+                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, themeMode = themeMode, onThemeChange = onThemeChange) }
             )
         }
 

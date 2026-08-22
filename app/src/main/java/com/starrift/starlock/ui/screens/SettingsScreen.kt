@@ -40,7 +40,7 @@ private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
 private val APP_VERSION = BuildConfig.VERSION_NAME
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit) {
+fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -49,6 +49,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit) {
     
     // Dil Seçimi Durumu
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
     val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
     val currentLangCode = prefs.getString("app_lang", "system") ?: "system"
     val currentLangText = when(currentLangCode) {
@@ -113,6 +114,17 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit) {
                 subtitle = currentLangText,
                 onClick = { showLanguageDialog = true }
             )
+                SettingsDivider()
+                SettingsRow(
+                    icon = Icons.Default.Palette,
+                    title = stringResource(R.string.theme),
+                    subtitle = when (themeMode) {
+                        "dark" -> stringResource(R.string.theme_dark)
+                        "light" -> stringResource(R.string.theme_light)
+                        else -> stringResource(R.string.theme_system)
+                    },
+                    onClick = { showThemeDialog = true }
+                )
         }
 
         Spacer(Modifier.height(20.dp))
@@ -216,6 +228,49 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit) {
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
+
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            title = { Text(stringResource(R.string.theme)) },
+            text = {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onThemeChange("system")
+                                showThemeDialog = false
+                            }
+                            .padding(16.dp)
+                    ) { Text(stringResource(R.string.theme_system), style = MaterialTheme.typography.bodyLarge) }
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onThemeChange("dark")
+                                showThemeDialog = false
+                            }
+                            .padding(16.dp)
+                    ) { Text(stringResource(R.string.theme_dark), style = MaterialTheme.typography.bodyLarge) }
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onThemeChange("light")
+                                showThemeDialog = false
+                            }
+                            .padding(16.dp)
+                    ) { Text(stringResource(R.string.theme_light), style = MaterialTheme.typography.bodyLarge) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
         )
     }
 

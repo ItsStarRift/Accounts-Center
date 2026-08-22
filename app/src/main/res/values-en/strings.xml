@@ -8,6 +8,10 @@
     <string name="lang_system">System Default</string>
     <string name="lang_tr">Türkçe</string>
     <string name="lang_en">English</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
     <string name="export_data">Export Data</string>
     <string name="export_data_sub">Download all data as a .json file</string>
     <string name="import_data">Import Data</string>

@@ -8,6 +8,10 @@
     <string name="lang_system">Sistem Varsayılanı</string>
     <string name="lang_tr">Türkçe</string>
     <string name="lang_en">English</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistem varsayılanı</string>
+    <string name="theme_dark">Karanlık</string>
+    <string name="theme_light">Aydınlık</string>
     <string name="export_data">Verileri dışa aktar</string>
     <string name="export_data_sub">Tüm verileri .json dosyası olarak indir</string>
     <string name="import_data">Verileri içe aktar</string>
