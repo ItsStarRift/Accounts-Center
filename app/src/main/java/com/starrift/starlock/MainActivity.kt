@@ -222,4 +222,3 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode
     }
         }
 }
-}
