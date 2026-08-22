@@ -65,6 +65,7 @@ fun HomeScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedTab by rememberSaveable { mutableStateOf(BottomTab.UYGULAMALAR) }
+    var confirmDeleteAppsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
     val allAppsFlat = remember(groups, favoriteApps) { favoriteApps + groups.flatMap { it.second } }
@@ -157,9 +158,11 @@ fun HomeScreen(
                                 allFavorite = selectedAppsAllFavorite,
                                 onClose = { selectedIds = emptySet() },
                                 onDelete = {
-                                    allAppsFlat.filter { it.id in selectedIds }
-                                        .forEach { viewModel.deleteApp(it) }
-                                    selectedIds = emptySet()
+                                    confirmDeleteAppsAction = {
+                                        allAppsFlat.filter { it.id in selectedIds }
+                                            .forEach { viewModel.deleteApp(it) }
+                                        selectedIds = emptySet()
+                                    }
                                 },
                                 onEdit = { showEditDialog = true },
                                 onToggleFavorite = {
@@ -228,6 +231,23 @@ fun HomeScreen(
                 existingIconPath = editingApp.iconPath
             )
         }
+    }
+
+    if (confirmDeleteAppsAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteAppsAction = null },
+            title = { Text(stringResource(R.string.delete_permanently_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_app_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDeleteAppsAction?.invoke()
+                    confirmDeleteAppsAction = null
+                }) { Text(stringResource(R.string.delete_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeleteAppsAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 }
 

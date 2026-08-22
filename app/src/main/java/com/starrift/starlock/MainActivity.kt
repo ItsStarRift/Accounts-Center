@@ -171,11 +171,19 @@ private fun AppRoot(repository: AppRepository) {
         }
 
         composable(route = Routes.TRASH) {
-            val trashViewModel: TrashViewModel = viewModel(factory = TrashViewModelFactory(repository))
-            TrashScreen(
-                viewModel = trashViewModel,
-                onBackClick = { navController.popBackStack() }
-            )
+            var trashUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
+            if (trashUnlocked) {
+                val trashViewModel: TrashViewModel = viewModel(factory = TrashViewModelFactory(repository))
+                TrashScreen(
+                    viewModel = trashViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            } else {
+                LockScreen(
+                    pinManager = pinManager,
+                    onUnlocked = { trashUnlocked = true }
+                )
+            }
         }
     }
 }

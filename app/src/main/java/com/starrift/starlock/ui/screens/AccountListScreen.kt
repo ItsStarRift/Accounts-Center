@@ -57,6 +57,7 @@ fun AccountListScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
+    var confirmDeleteAccountsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val selectedAllFavorite = remember(selectedIds, accounts) {
         selectedIds.isNotEmpty() && accounts.filter { it.id in selectedIds }.all { it.isFavorite }
@@ -120,9 +121,11 @@ fun AccountListScreen(
                     allFavorite = selectedAllFavorite,
                     onClose = { selectedIds = emptySet() },
                     onDelete = {
-                        accounts.filter { it.id in selectedIds }
-                            .forEach { viewModel.deleteAccount(it) }
-                        selectedIds = emptySet()
+                        confirmDeleteAccountsAction = {
+                            accounts.filter { it.id in selectedIds }
+                                .forEach { viewModel.deleteAccount(it) }
+                            selectedIds = emptySet()
+                        }
                     },
                     onEdit = { showEditDialog = true },
                     onToggleFavorite = {
@@ -214,6 +217,23 @@ fun AccountListScreen(
                 )
             }
         }
+    }
+
+    if (confirmDeleteAccountsAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteAccountsAction = null },
+            title = { Text(stringResource(R.string.delete_permanently_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_account_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDeleteAccountsAction?.invoke()
+                    confirmDeleteAccountsAction = null
+                }) { Text(stringResource(R.string.delete_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeleteAccountsAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 }
 
