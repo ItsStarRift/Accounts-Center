@@ -228,7 +228,8 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, theme
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
-
+        )
+    }
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
