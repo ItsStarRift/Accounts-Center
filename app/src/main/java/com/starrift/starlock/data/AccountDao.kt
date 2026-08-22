@@ -22,7 +22,7 @@ data class AccountWithAppName(
 @Dao
 interface AccountDao {
 
-    @Query("SELECT * FROM accounts WHERE appId = :appId AND isDeleted = 0 ORDER BY name COLLATE NOCASE ASC")
+    @Query("SELECT * FROM accounts WHERE appId = :appId AND isDeleted = 0 AND isArchived = 0 ORDER BY name COLLATE NOCASE ASC")
     fun getAccountsForApp(appId: Long): Flow<List<AccountItem>>
 
     @Insert

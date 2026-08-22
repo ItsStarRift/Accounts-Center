@@ -13,7 +13,7 @@ import net.sqlcipher.database.SupportFactory
 
 @Database(
     entities = [AppItem::class, AccountItem::class, AccountField::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -63,6 +63,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE apps ADD COLUMN archivedAt INTEGER")
+            db.execSQL("ALTER TABLE accounts ADD COLUMN archivedAt INTEGER")
+        }
+    }
+
         private fun buildDatabase(context: Context): AppDatabase {
             // SQLCipher'ın kendi native kütüphanesini yükle
             SQLiteDatabase.loadLibs(context)
@@ -72,7 +79,7 @@ abstract class AppDatabase : RoomDatabase() {
 
             return Room.databaseBuilder(context, AppDatabase::class.java, "hesap_yoneticisi.db")
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
         }
     }
