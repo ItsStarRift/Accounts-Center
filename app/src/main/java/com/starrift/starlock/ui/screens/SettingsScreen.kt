@@ -272,8 +272,6 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, theme
             }
         )
     }
-        )
-    }
 
     if (showAboutDialog) {
         AlertDialog(
