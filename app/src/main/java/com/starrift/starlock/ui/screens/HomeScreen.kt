@@ -164,6 +164,11 @@ fun HomeScreen(
                                         selectedIds = emptySet()
                                     }
                                 },
+                onArchive = {
+                    val ids = selectedIds
+                    ids.forEach { viewModel.archiveApp(setOf(it)) }
+                    selectedIds = emptySet()
+                },
                                 onEdit = { showEditDialog = true },
                                 onToggleFavorite = {
                                     viewModel.toggleFavorite(selectedIds, makeFavorite = !selectedAppsAllFavorite)
@@ -292,6 +297,7 @@ private fun SelectionBar(
     allFavorite: Boolean,
     onClose: () -> Unit,
     onDelete: () -> Unit,
+    onArchive: () -> Unit,
     onEdit: () -> Unit,
     onToggleFavorite: () -> Unit
 ) {
@@ -323,6 +329,9 @@ private fun SelectionBar(
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
             }
+        }
+        IconButton(onClick = onArchive) {
+            Icon(Icons.Default.Archive, contentDescription = "Arşivle")
         }
         IconButton(onClick = onDelete) {
             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_confirm))

@@ -81,6 +81,12 @@ class AccountListViewModel(
         }
     }
 
+    fun archiveAccount(accountIds: Set<Long>) {
+        viewModelScope.launch {
+            accountIds.forEach { id -> repository.archiveAccount(id) }
+        }
+    }
+
     fun deleteAccount(account: AccountItem) {
         viewModelScope.launch {
             repository.softDeleteAccount(account.id)

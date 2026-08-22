@@ -99,6 +99,12 @@ class HomeViewModel(private val repository: AppRepository) : ViewModel() {
         }
     }
 
+    fun archiveApp(appIds: Set<Long>) {
+        viewModelScope.launch {
+            appIds.forEach { id -> repository.archiveApp(id) }
+        }
+    }
+
     fun deleteApp(app: AppWithAccountCount) {
         viewModelScope.launch {
             repository.softDeleteApp(app.id)
