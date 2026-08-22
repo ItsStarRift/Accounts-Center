@@ -29,5 +29,6 @@ data class AccountItem(
     val createdAt: Long = System.currentTimeMillis(),
     val isFavorite: Boolean = false,
     val isDeleted: Boolean = false,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val isArchived: Boolean = false
 )

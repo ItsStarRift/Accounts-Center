@@ -44,6 +44,9 @@ import com.starrift.starlock.ui.screens.SettingsViewModelFactory
 import com.starrift.starlock.ui.screens.TrashScreen
 import com.starrift.starlock.ui.screens.TrashViewModel
 import com.starrift.starlock.ui.screens.TrashViewModelFactory
+import com.starrift.starlock.ui.screens.ArchivedScreen
+import com.starrift.starlock.ui.screens.ArchivedViewModel
+import com.starrift.starlock.ui.screens.ArchivedViewModelFactory
 import com.starrift.starlock.ui.theme.HesapYoneticisiTheme
 import com.starrift.starlock.util.PinManager
 import com.starrift.starlock.ui.screens.LockScreen
@@ -135,7 +138,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode
             HomeScreen(
                 viewModel = homeViewModel,
                 onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
-                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, themeMode = themeMode, onThemeChange = onThemeChange) }
+                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, onArchivedClick = { navController.navigate(Routes.ARCHIVED) }, themeMode = themeMode, onThemeChange = onThemeChange) }
             )
         }
 
@@ -200,6 +203,22 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode
                     onUnlocked = { trashUnlocked = true }
                 )
             }
+
+    composable(route = Routes.ARCHIVED) {
+        var archivedUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
+        if (archivedUnlocked) {
+            val archivedViewModel: ArchivedViewModel = viewModel(factory = ArchivedViewModelFactory(repository))
+            ArchivedScreen(
+                viewModel = archivedViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        } else {
+            LockScreen(
+                pinManager = pinManager,
+                onUnlocked = { archivedUnlocked = true }
+            )
+        }
+    }
         }
     }
 }

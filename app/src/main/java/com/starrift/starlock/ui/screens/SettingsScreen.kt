@@ -40,7 +40,7 @@ private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
 private val APP_VERSION = BuildConfig.VERSION_NAME
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
+fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArchivedClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -150,10 +150,16 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, theme
                 subtitle = stringResource(R.string.trash_sub),
                 onClick = onTrashClick
             )
-        }
 
+            SettingsRow(
+                icon = Icons.Default.Archive,
+                title = stringResource(R.string.archived),
+                subtitle = stringResource(R.string.archived_sub),
+                onClick = onArchivedClick
+            )
         Spacer(Modifier.height(20.dp))
 
+        }
         SettingsGroup {
             SettingsRow(
                 icon = Icons.Default.Email,

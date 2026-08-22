@@ -46,6 +46,15 @@ class AppRepository(private val database: AppDatabase) {
     suspend fun permanentlyDeleteAccount(accountId: Long) = database.accountDao().permanentlyDeleteAccount(accountId)
     suspend fun permanentlyDeleteField(fieldId: Long) = database.accountFieldDao().permanentlyDeleteField(fieldId)
 
+    // --- Arşivleme ---
+    fun getArchivedApps(): Flow<List<AppItem>> = database.appDao().getArchivedApps()
+    fun getArchivedAccounts(): Flow<List<AccountWithAppName>> = database.accountDao().getArchivedAccounts()
+
+    suspend fun archiveApp(appId: Long) = database.appDao().archiveApp(appId)
+    suspend fun unarchiveApp(appId: Long) = database.appDao().unarchiveApp(appId)
+    suspend fun archiveAccount(accountId: Long) = database.accountDao().archiveAccount(accountId)
+    suspend fun unarchiveAccount(accountId: Long) = database.accountDao().unarchiveAccount(accountId)
+
     fun getAllAppsWithCount(): Flow<List<AppWithAccountCount>> =
         database.appDao().getAllAppsWithCount()
 

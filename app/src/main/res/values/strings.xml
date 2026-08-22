@@ -120,4 +120,10 @@
     <string name="trash_tab_accounts">Hesaplar</string>
     <string name="trash_tab_fields">Terimler</string>
     <string name="trash_empty">Çöp kutusu boş</string>
+    <string name="archived">Arşivlenenler</string>
+    <string name="archived_sub">Arşivlenen öğeleri görüntüle</string>
+    <string name="archived_empty">Arşiv boş</string>
+    <string name="archived_fields_placeholder">Terim arşivleme yakında</string>
+    <string name="unarchive">Arşivden çıkar</string>
+    <string name="archive">Arşivle</string>
 </resources>
