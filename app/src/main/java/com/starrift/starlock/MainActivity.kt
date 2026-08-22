@@ -203,6 +203,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode
                     onUnlocked = { trashUnlocked = true }
                 )
             }
+        }
 
     composable(route = Routes.ARCHIVED) {
         var archivedUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
